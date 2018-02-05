@@ -3,12 +3,12 @@
   * Ext.ux.form.DateFieldPlus  Addon  
   *
   * @author    Marco Wienkoop (wm003/lubber)
-  * @copyright (c) 2008, Marco Wienkoop (marco.wienkoop@lubber.de) http://www.lubber.de
+  * @copyright (c) 2008-2010, Marco Wienkoop (marco.wienkoop@lubber.de) http://www.lubber.de
   *
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
   *
-  * v.1.4 Beta 2
+  * v.1.4 RC1
   *
   * @class Ext.ux.form.DateFieldPlus
   * @extends Ext.form.DateField
@@ -86,12 +86,18 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.4 RC1 [2010/03/04]
+- checked to work with ExtJS 3.1.1
+- BUGFIX: DateField Events did not work properly (reported by yuewah)
+- BUGFIX: beforedestroy throws exception when parent control of datepickerplus gets destroyed (reported by yuewah)
+- spanish locale corrected (holiday had a leading zero)
+
 v.1.4 Beta 2 [2009/09/18]
 - checked to work with ExtJS 3.0.0
 - checked to work with ExtJS 2.3.0
 - Adopted config item prevNextDaysView to DateFieldPlus
 - Adopted events beforedateclick, beforeweekclick and beforemonthclick to DateFieldPlus
-- more code optimations for Ext 3.0 compatibility
+- more code optimization for Ext 3.0 compatibility
 - support option "defaultvalue" on datefieldplus
 - BUGFIX: setDisabled did not work under Ext 3.0 (reported by radtad)
 
@@ -280,8 +286,10 @@ Be sure to include it AFTER the datepickerwidget!
 
 ROAD MAP:
 
-v1.5 (~ Summer/Autumn 2009)
-- add a config item to be able to hide specific dates/days just like disableddays but they are not even visible
+v1.5 (~ Spring 2010)
+- Check if given value for first renderered month stays within a given min/maxdate (suggested by bholyoak)
+- add a config item to be able to hide specific dates just like disableddays but they are not even visible
+- add a config item to be able to hide specific days (do not even display a column for that days)
 - add an additional event when the Ok-button is clicked
 - support shiftclick without deleting all previous selected dates
 - separate method to add/remove an eventdate or an array of eventdates without the need to supply the full set of eventdates
@@ -296,7 +304,7 @@ v1.5 (~ Summer/Autumn 2009)
 - support hovering a full week/month/days when moving the mouse over weekday/weeknumber/weeknumberheader
 - support dateranges for eventdates
 
-v1.6/2.0 (~ Winter 2009/Spring 2010)
+v1.6/2.0 (~ Summer/Fall 2010)
 - change monthselection to combobox selection of month and year as an option
 - implement time selection also like http://extjs.com/forum/showthread.php?p=170472#post170472
 - use the spinner plugin for above selections if available (or integrate it) or combobox instead (?)
@@ -1671,7 +1679,9 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			if (this.undoBtn){
 				this.undoBtn.destroy();			
 			}
-			this.eventEl.destroy();
+			Ext.destroy(
+				this.eventEl
+			);			
 		}
 	},
 
@@ -2184,55 +2194,55 @@ if (Ext.form && Ext.form.DateField) {
 		allowOtherMenus: false,
 
 		onBeforeYearChange : function(picker, oldStartYear, newStartYear){
-			this.fireEvent("beforeyearchange", this, oldStartYear, newStartYear, picker);
+			return this.fireEvent("beforeyearchange", this, oldStartYear, newStartYear, picker);
 		},
 		
 		onAfterYearChange : function(picker, oldStartYear, newStartYear){
-			this.fireEvent("afteryearchange", this, oldStartYear, newStartYear, picker);
+			return this.fireEvent("afteryearchange", this, oldStartYear, newStartYear, picker);
 		},
 		
 		onBeforeMonthChange : function(picker, oldStartMonth, newStartMonth){
-			this.fireEvent("beforemonthchange", this, oldStartMonth, newStartMonth, picker);
+			return this.fireEvent("beforemonthchange", this, oldStartMonth, newStartMonth, picker);
 		},
 		
 		onAfterMonthChange : function(picker, oldStartMonth, newStartMonth){
-			this.fireEvent("aftermonthchange", this, oldStartMonth, newStartMonth, picker);
+			return this.fireEvent("aftermonthchange", this, oldStartMonth, newStartMonth, picker);
 		},
 		
 		onAfterMonthClick : function(picker, month, wasSelected){
-			this.fireEvent("aftermonthclick", this, month, wasSelected, picker);
+			return this.fireEvent("aftermonthclick", this, month, wasSelected, picker);
 		},
 		
 		onAfterWeekClick : function(picker, startOfWeek, wasSelected){
-			this.fireEvent("afterweekclick", this, startOfWeek, wasSelected, picker);
+			return this.fireEvent("afterweekclick", this, startOfWeek, wasSelected, picker);
 		},
 
 		onAfterDateClick : function(picker, date, wasSelected){
-			this.fireEvent("afterdateclick", this, date, wasSelected, picker);
+			return this.fireEvent("afterdateclick", this, date, wasSelected, picker);
 		},
 		
 		onBeforeMonthClick : function(picker, month, wasSelected){
-			this.fireEvent("beforemonthclick", this, month, wasSelected, picker);
+			return this.fireEvent("beforemonthclick", this, month, wasSelected, picker);
 		},
 		
 		onBeforeWeekClick : function(picker, startOfWeek, wasSelected){
-			this.fireEvent("beforeweekclick", this, startOfWeek, wasSelected, picker);
+			return this.fireEvent("beforeweekclick", this, startOfWeek, wasSelected, picker);
 		},
 
 		onBeforeDateClick : function(picker, date){
-			this.fireEvent("beforedateclick", this, date);
+			return this.fireEvent("beforedateclick", this, date);
 		},
 
 		onBeforeMouseWheel : function(picker, event){
-			this.fireEvent("beforemousewheel", this, event, picker);
+			return this.fireEvent("beforemousewheel", this, event, picker);
 		},
 		
 		onBeforeMaxDays : function(picker){
-			this.fireEvent("beforemaxdays", this, picker);
+			return this.fireEvent("beforemaxdays", this, picker);
 		},
 		
 		onUndo : function(picker, preSelectedDates){
-			this.fireEvent("undo", this, preSelectedDates, picker);
+			return this.fireEvent("undo", this, preSelectedDates, picker);
 		},
 
 		onTriggerClick : function(){
