@@ -8,6 +8,8 @@
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
   *
+  * v.1.4 Beta
+  *
   * @class Ext.ux.form.DateFieldPlus
   * @extends Ext.form.DateField
   *
@@ -55,6 +57,8 @@ Also adds Ext.util.EasterDate
  * GPL v3
  * License details: http://www.gnu.org/licenses/gpl.html
 
+ Commercial License available! See http://www.lubber.de/extjs/datepickerplus for more info
+
 * Donations are always welcome :)
 * Any amount is greatly appreciated and will help to continue on developing ExtJS Widgets
 *
@@ -81,6 +85,23 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.4 Beta [2009/07/03]
+- checked to work with ExtJS 3.0-RC3
+- checked to work with ExtJS 2.2.1
+- support of jsondates  (e.g. "2008-08-04T12:22:00") in setEventDates, setSelectedDates, setAllowedDates,setMindate and setMaxdate
+- some Code optimizations
+- corrected holidays in german locale
+- added events beforedateclick, beforeweekclick and beforemonthclick
+- added dutch locale (thanks to walldorff)
+- added french locale (thanks to dubdub)
+- added Norwegian bokmål locale (thanks to Alex Brasetvik)
+- added spanish locale (thanks to erzsebet)
+- added version config
+- added config prevNextDaysView ("mark","nomark",false) to disable automatic selection/view of selected days of current months in previous and next month, so only the current months days are selectable (suggested by sirtimbly)
+- BUGFIX: select-event on datefieldplus was added again each time the trigger has been clicked
+- BUGFIX: Fix for updatehidden in case of multiselection (thanks to Hunyi)
+- BUGFIX: do not handle dateselection when disabled-property is set
+
 v.1.3 [2008/08/05]
 - Support of ExtJS 2.2
 - Adopted new config items from 1.2 to DateFieldPlus also
@@ -229,12 +250,17 @@ Joined the extensions together nicely and added even more features:
 - added Tooltip functionality to DateFieldPlus just like Buttons (tooltip show on triggerbutton only, this way invalidtext tooltips stay intact)
 
 
-- Tested in FF2,FF3,IE6,IE7,IE8b,Op9.x,Saf3.1.x(Win)
+- Tested in FF2/3/3.5,IE6/7/8,Op9/10b,Saf3/4(Win),Chrome2/3
 
 - Default Language is (of course) english (including US Holidays!)
 - Current available localization files (including Holidays):
 	german
 	russian
+	italian
+	dutch
+	french
+	norwegian
+	spanish
 	english (for your own translations)
 
 Create a copy of ext.ux.datepickerplus-lang-en.js and change it to your language settings to get this widget easily translated
@@ -242,13 +268,27 @@ Be sure to include it AFTER the datepickerwidget!
 
 --- See Release-Notes for Full API Documentation --- 
 
-TODO:
-* COMING UP *
-- added "resizable" to support resizing of datepicker when displayed as datemenu or datefield and automatically create more/less months and adjust noOfMonth, noOfMonthPerRow
+ROAD MAP:
 
-* FUTURE *
+v1.5 (~ Summer/Autumn 2009)
+- add an additional event when the Ok-button is clicked
+- support shiftclick without deleting all previous selected dates
+- separate method to add/remove an eventdate or an array of eventdates without the need to supply the full set of eventdates
+- same for disableddates/alloweddates/selecteddates (creating something like addAllowedDates/removeAllowedDates)
+- support of multiple events at the same date
+- support of month-gaps (e.g. display every 3rd Month only)
+- support of descending month display on multimonths and navigation
+- give eventdates tooltips more priority or merge them with the today/holidays tooltips (suggested by RuiDC)
+- turned today button into cyclebutton to be able to also use "Begin of year" "next decade"...(idea from Peter seliger -> http://extjs.com/forum/showthread.php?t=61645)
+- added "resizable" to support resizing of datepicker when displayed as datemenu or datefield and automatically create more/less months and adjust noOfMonth, noOfMonthPerRow
+- support selection of all weekdays per month by clicking on the apropriate weekday shortcut column header
+- support hovering a full week/month/days when moving the mouse over weekday/weeknumber/weeknumberheader
+- support dateranges for eventdates
+
+v1.6/2.0 (~ Winter 2009/Spring 2010)
+- change monthselection to combobox selection of month and year as an option
 - implement time selection also like http://extjs.com/forum/showthread.php?p=170472#post170472
-- use the spinner plugin for above time selection if available (or integrate it) or combobox instead (?)
+- use the spinner plugin for above selections if available (or integrate it) or combobox instead (?)
 - optional combobox as an alternative to the monthpicker with a given range of previous/next months to select from
 - context menu to select predefined dates (12 months ago, next 3 thursdays, etc...thinking of integrating datejs for this ?)
 - usage of window.createPopup for IE only to render more quickly (? based on http://extjs.com/forum/showthread.php?t=33331)
@@ -257,14 +297,15 @@ TODO:
 - support drag selection of days/weeks/months (like in dataview example)
 - extend property grid/create plugin to use datepickerplus aswell for date-fields in there
 - show monthpicker only (requested in http://extjs.com/forum/showthread.php?t=13911)
-- try to speed up rendering-performance, when clicking on next/previous month (update()) and on startup (onRender()) (IE and FF are much slower than Opera(which is equal slow, but renders immediatly every part of the calendar while IE/FF are rendering the complete calender at the end). Safari3.1(Win) renders very fast by now!
+- full support of editor grids
+- try to speed up rendering-performance, when clicking on next/previous month (update()) and on startup (onRender()) (IE and FF are much slower than Opera(which is equal slow, but renders immediatly every part of the calendar while IE/FF are rendering the complete calender at the end). Safari3.2(Win) and Chrome render very fast by now!
+																																																																										
 
 * ? BROWSER BUGS ? *
 - FF2: CTRL-multiselect clicking leaves an odd blue frame on the cell when clicking in empty areas of the cell (the CSS-Trick for preventing new TABs in IE does not work here...yet :)
 
 
 */
-
 
 
 Date.prototype.getFirstDateOfWeek = function(startDay) {
@@ -322,6 +363,8 @@ Ext.namespace('Ext.ux','Ext.ux.form');
   * @param {Object} config The config object
  */
 Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
+								   
+	version: "1.4",
     /**
     * @cfg {Number} noOfMonth
     * No of Month to be displayed
@@ -376,7 +419,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			update=true;
 		}
 		this.edArray = [];
-		for (var i=0,il=edArray.length;i<il;i++) {
+		for (var i=0,il=edArray.length;i<il;++i) {
 			if (Ext.isDate(edArray[i])) {
 				this.edArray.push({
 					date:edArray[i],
@@ -385,6 +428,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				});
 			}
 			else if (edArray[i].date) {
+				edArray[i].date = this.jsonDate(edArray[i].date);
 				this.edArray.push(edArray[i]);				
 			}
 		}
@@ -454,6 +498,15 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
     */    
     selectedDates : [],
 
+
+/**
+    * @cfg {String/Bool} prevNextDaysView
+    * "mark" selected days will be marke in prev/next months also
+	* "nomark" will not be marked and are not selectable
+	* false: will hide them, thus are not selectable too
+    */    
+	prevNextDaysView: "mark",
+	
 	/**
     * @cfg {Array of Dateobjects} preSelectedDates
     * contains the same at selection runtime (until "OK" is pressed)
@@ -693,6 +746,27 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
              */
             'aftermonthchange',
             /**
+             * @event beforemonthclick
+             * Fires before a full month is (un)selected
+             * @param {DatePicker} this
+             * @param {monthnumber} dates The selected month
+             */
+            'beforemonthclick',
+            /**
+             * @event beforeweekclick
+             * Fires before a week is (un)selected
+             * @param {DatePicker} this
+             * @param {dateobject} dates The first date of selected week
+             */
+            'beforeweekclick',
+            /**
+             * @event beforeweekclick
+             * Fires before a single day is (un)selected
+             * @param {DatePicker} this
+             * @param {dateobject} dates The selected date
+             */
+            'beforedateclick',
+            /**
              * @event aftermonthclick
              * Fires after a full month is (un)selected
              * @param {DatePicker} this
@@ -809,7 +883,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		}
 		
 		var dn = this.dayNames;
-		for(var i = 0; i < 7; i++){
+		for(var i = 0; i < 7; ++i){
 		   var d = this.startDay+i;
 		   if(d > 6){
 			   d = d-7;
@@ -822,7 +896,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			mpre.push('<td class="x-date-weeknumber-cell"><a href="#" hidefocus="on" class="x-date-weeknumber" tabIndex="1"><em><span ',weekNumberQuickTip,'></span></em></a></td>');
 		}
 		
-		for(var k = 0; k < 42; k++) {
+		for(var k = 0; k < 42; ++k) {
 			if(k % 7 === 0 && k > 0){
 				if (this.showWeekNumber) {
 					mpre.push('</tr><tr><td class="x-date-weeknumber-cell"><a href="#" hidefocus="on" class="x-date-weeknumber" tabIndex="1"><em><span ',weekNumberQuickTip,'></span></em></a></td>');
@@ -840,8 +914,8 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			m.push("<tr>");
 		}
 
-		for(var x=0; x<this.noOfMonth; x++) {            
-            m.push('<td><table class="x-date-pickerplus',(x%this.noOfMonthPerRow===0?'':' x-date-monthtable'),'" cellspacing="0"><tr>');
+		for(var x=0,xk=this.noOfMonth; x<xk; ++x) {            
+            m.push('<td><table class="x-date-pickerplus',(x%this.noOfMonthPerRow===0?'':' x-date-monthtable'),(!this.prevNextDaysView?" x-date-pickerplus-prevnexthide":""),'" cellspacing="0"><tr>');
 			if (x===0) {
 				m.push('<td class="x-date-left">');
 				if (this.renderPrevNextButtons) {
@@ -943,44 +1017,50 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
         var kn = new Ext.KeyNav(this.eventEl, {
             "left" : function(e){
-                (e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextButtons) ?
+                (!this.disabled && e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextButtons) ?
                     this.showPrevMonth() :
 					this.activeDateKeyNav(-1));
             },
 
             "right" : function(e){
-                (e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextButtons) ?
+                (!this.disabled && e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextButtons) ?
                     this.showNextMonth() :
 					this.activeDateKeyNav(1));
             },
 
             "up" : function(e){
-                (e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextYearButtons) ?
+                (!this.disabled && e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextYearButtons) ?
                     this.showNextYear() :
 					this.activeDateKeyNav(-7));
             },
 
             "down" : function(e){
-                (e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextYearButtons) ?
+                (!this.disabled && e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextYearButtons) ?
                     this.showPrevYear() :
 					this.activeDateKeyNav(7));
             },
 
             "pageUp" : function(e){
-		        this.update(this.activeDate.add("mo", this.pageKeyWarp*(-1)));
+				if (!this.disabled) {
+			        this.update(this.activeDate.add("mo", this.pageKeyWarp*(-1)));
+				}
             },
 
             "pageDown" : function(e){
-		        this.update(this.activeDate.add("mo", this.pageKeyWarp));
+				if (!this.disabled) {				
+			        this.update(this.activeDate.add("mo", this.pageKeyWarp));
+				}
             },
 
             "enter" : function(e){
                 e.stopPropagation();
-				if (this.multiSelection) {
-					this.okClicked();
-				}
-				else {
-					this.finishDateSelection(this.activeDate);
+				if (!this.disabled) {				
+					if (this.multiSelection) {
+						this.okClicked();
+					}
+					else {
+						this.finishDateSelection(this.activeDate);
+					}
 				}
                 return true;
             }, 
@@ -1002,7 +1082,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		this.weekNumberHeaderCellsArray = [];
 	
 		var cells,textNodes,weekNumberCells,weekNumberTextEls,weekNumberHeaderCells;
-        for(var xx=0; xx< this.noOfMonth; xx++) {
+        for(var xx=0,xxk=this.noOfMonth; xx< xxk; ++xx) {
             cells = Ext.get(this.id+'-inner-date'+xx).select("tbody td.x-date-date-cell");
             textNodes = Ext.get(this.id+'-inner-date'+xx).query("tbody td.x-date-date-cell span");
             this.cellsArray[xx] = cells;
@@ -1025,7 +1105,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				renderTo: this.el.child("td.x-date-firstMonth", true)			
 			});
 	
-			this.mbtn.on('click', this.showMonthPicker, this);
+			this.mbtn.on('click', this.showMonthPickerPlus, this);
 			this.mbtn.el.child(this.mbtn.menuClassTarget).addClass("x-btn-with-menu");
 		}
 
@@ -1053,12 +1133,14 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 	            renderTo: this.el.child("td.x-date-bottom .x-date-multiundobtn", true),
 				text: this.undoText,
 				handler: function() {
-		            this.fireEvent("undo", this, this.preSelectedDates);
-					this.preSelectedDates = [];
-					for (var i=0,il=this.selectedDates.length;i<il;i++) {
-						this.preSelectedDates.push(this.selectedDates[i].clearTime().getTime());
+					if (!this.disabled) {
+						this.fireEvent("undo", this, this.preSelectedDates);
+						this.preSelectedDates = [];
+						for (var i=0,il=this.selectedDates.length;i<il;++i) {
+							this.preSelectedDates.push(this.selectedDates[i].clearTime().getTime());
+						}
+						this.update(this.activeDate);
 					}
-					this.update(this.activeDate);
 				},
 				scope: this
 			});
@@ -1090,18 +1172,24 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
         }
 //preselect dates if given
 		this.preSelectedDates = [];
-		for(var sdc=0, sdcl=this.selectedDates.length; sdc < sdcl; sdc++) {
+		for(var sdc=0, sdcl=this.selectedDates.length; sdc < sdcl; ++sdc) {
 		   this.preSelectedDates.push(this.selectedDates[sdc].clearTime().getTime());
 		}
 
         this.update(this.value);
     },
+	
+	showMonthPickerPlus: function() {
+		if (!this.disabled) {
+			this.showMonthPicker();
+		}
+	},
 
 //converts all custom dates to timestamps numbers for faster calculations and splits their attributes into separate arrays
 	convertCSSDatesToNumbers : function(objarr) {
 //date,text,class		
 		var converted =  [[],[],[]];
-		for (var i=0,il=objarr.length;i<il;i++) {
+		for (var i=0,il=objarr.length;i<il;++i) {
 			converted[0][i] = objarr[i].date.clearTime().getTime();
 			converted[1][i] = (objarr[i].text ? objarr[i].text : this.defaultEventDatesText);
 			converted[2][i] = (objarr[i].cls ? objarr[i].cls : this.defaultEventDatesCls);
@@ -1120,15 +1208,33 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		}
 	},
 	
+//support json dates
+	jsonDate: function(dates) {
+		if (!Ext.isArray(dates)) {
+			if (typeof dates === "string") {
+				return Date.parseDate(dates.replace(/T/," "),'Y-m-d H:i:s');
+			}
+		}
+		else {
+			for (var i=0,il=dates.length;i<il;i++) {
+				if (typeof dates[i] === "string") {
+					dates[i] = Date.parseDate(dates[i].replace(/T/," "),'Y-m-d H:i:s');
+				}
+			}
+		}
+		return dates;
+	},
+	
 	setSelectedDates : function(dates,update) {
 		if (typeof update === "undefined") {
 			update=true;
 		}
+		dates = this.jsonDate(dates);
 		if (!Ext.isArray(dates)) {
 			dates = [dates];
 		}
 		var d, dt;
-		for (var i=0,il=dates.length;i<il;i++) {
+		for (var i=0,il=dates.length;i<il;++i) {
 			d = dates[i];
 			dt = d.clearTime().getTime();
 			if (this.preSelectedDates.indexOf(dt)==-1) {
@@ -1145,25 +1251,25 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		if (typeof update === "undefined") {
 			update=true;
 		}
-		this.allowedDates = dates;
+		this.allowedDates = this.jsonDate(dates);
 		if (this.rendered && update) {
 			this.update(this.activeDate);
 		}
 	},
 
 	setMinDate: function(minDate) {
-		this.minDate = minDate;
+		this.minDate = this.jsonDate(minDate);
         this.update(this.value, true);
 	},
 
 	setMaxDate: function(maxDate) {
-		this.maxDate = maxDate;
+		this.maxDate = this.jsonDate(maxDate);
         this.update(this.value, true);
 	},
 
 	setDateLimits: function(minDate,maxDate) {
-		this.minDate = minDate;
-		this.maxDate = maxDate;
+		this.minDate = this.jsonDate(minDate);
+		this.maxDate = this.jsonDate(maxDate);
         this.update(this.value, true);
 	},
 
@@ -1240,7 +1346,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		this.todayDayCell = false;
 		if (this.allowedDates) {
 			this.allowedDatesT = [];
-			for (var k=0, kl=this.allowedDates.length;k<kl;k++) {
+			for (var k=0, kl=this.allowedDates.length;k<kl;++k) {
 				this.allowedDatesT.push(this.allowedDates[k].clearTime().getTime());
 			}
 		}
@@ -1256,7 +1362,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			if (cal.lastRenderedYear!==dfY) {
 				cal.lastRenderedYear=dfY;
 				if(cal.markNationalHolidays) {
-//neue berechnete holiday-liste erzeugen
+//calculate new holiday list for current year
 					cal.nationalHolidaysNumbered = cal.convertCSSDatesToNumbers(cal.nationalHolidays(dfY));
 				}
 				cal.eventDatesNumbered = cal.convertCSSDatesToNumbers(cal.eventDates(dfY));
@@ -1374,14 +1480,11 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		};
 
 		var cells,textEls,days,firstOfMonth,startingPos,pm,prevStart,d,sel,i,intDay,weekNumbers,weekNumbersTextEls,curWeekStart,weekNumbersHeader,monthLabel,main,w;
-		var qturfn = function(c){
-			Ext.QuickTips.unregister(c);
-		};
 		var summarizeHTML = [];
-		for(var x=0;x<this.noOfMonth;x++) {
-			if (this.summarizeHeader && this.noOfMonth > 1 && (x==0||x==this.noOfMonth-1)) {
+		for(var x=0,xk=this.noOfMonth;x<xk;++x) {
+			if (this.summarizeHeader && this.noOfMonth > 1 && (x===0||x==this.noOfMonth-1)) {
 				summarizeHTML.push(this.monthNames[date.getMonth()]," ",date.getFullYear());
-				if (x==0) {
+				if (x===0) {
 					summarizeHTML.push(" - ");
 				}
 			}
@@ -1389,7 +1492,9 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			textEls = this.textNodesArray[x];
 
 			if ((this.markNationalHolidays || this.eventDates.length>0) && this.useQuickTips) {
-				Ext.each(textEls,qturfn,this);
+				for (var e=0,el=textEls.length;e<el;++e) {
+					Ext.QuickTips.unregister(textEls[e]);
+				}
 			}
 			
 			days = date.getDaysInMonth();
@@ -1431,7 +1536,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				i = 0;
 			}
 
-			for(; i < startingPos; i++) {
+			for(; i < startingPos; ++i) {
 				textEls[i].innerHTML = (++prevStart);
 				cells[i].firstChild.monthCell = x;
 				cells[i].firstChild.dayCell = i;
@@ -1441,7 +1546,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				setCellClass(this, cells[i],textEls[i],d);
 			}
 			
-			for(; i < days; i++){
+			for(; i < days; ++i){
 				intDay = i - startingPos + 1;
 				textEls[i].innerHTML = (intDay);
 				cells[i].firstChild.monthCell = x;
@@ -1456,7 +1561,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			}
 		
 			var extraDays = 0;
-			for(; i < 42; i++) {
+			for(; i < 42; ++i) {
 				textEls[i].innerHTML = (++extraDays);
 				cells[i].firstChild.monthCell = x;
 				cells[i].firstChild.dayCell = i;
@@ -1527,69 +1632,80 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
 
     handleWeekClick : function(e, t){
-
-		e.stopEvent();
-		var startweekdate = new Date(t.dateValue).getFirstDateOfWeek(this.startDay), amount=0, startmonth, curmonth,enableUnselect;
-		var monthcell = t.monthCell;
-		var daycell = t.dayCell;		
-		switch(t.parentNode.tagName.toUpperCase()) {
-		case "TH":
-			amount=42;
-			startmonth = t.monthValue;
-			break;
-		case "TD":
-			amount=7;
-			break;
-		}
-		if (!Ext.EventObject.ctrlKey && this.multiSelectByCTRL) {
-			this.removeAllPreselectedClasses();
-		}
-		
-		enableUnselect=true;	
-		if (this.disablePartialUnselect) {
-			var teststartweekdate = startweekdate;
-			for (var k=0;k<amount;k++) {
-//check, if the whole set is still selected, then make unselection possible again
-				curmonth = teststartweekdate.getMonth();		
-				if ((amount == 7 || curmonth === startmonth) && this.preSelectedDates.indexOf(teststartweekdate.clearTime().getTime())==-1) {
-					enableUnselect=false;
-					break;
+		if (!this.disabled) {
+			e.stopEvent();
+			var startweekdate = new Date(t.dateValue).getFirstDateOfWeek(this.startDay), amount=0, startmonth, curmonth,enableUnselect;
+			var monthcell = t.monthCell;
+			var daycell = t.dayCell;
+			switch(t.parentNode.tagName.toUpperCase()) {
+			case "TH":
+				amount=42;
+				startmonth = t.monthValue;
+				break;
+			case "TD":
+				amount=7;
+				break;
+			}
+			
+			if ((amount==42 && this.fireEvent("beforemonthclick", this, startmonth,this.lastStateWasSelected) !== false)
+			||  (amount==7 && this.fireEvent("beforeweekclick", this, startweekdate,this.lastStateWasSelected) !== false)) {
+			
+				if (!Ext.EventObject.ctrlKey && this.multiSelectByCTRL) {
+					this.removeAllPreselectedClasses();
 				}
-				teststartweekdate = teststartweekdate.add(Date.DAY,1);
-			}
-		}
-
-		var reverseAdd =  false;
-		var dateAdder = 1;
-		if (this.strictRangeSelect &&	(
-											(this.preSelectedDates.indexOf(startweekdate.add(Date.DAY,-1).clearTime().getTime())==-1 && !enableUnselect) ||
-											(this.preSelectedDates.indexOf(startweekdate.add(Date.DAY,-1).clearTime().getTime())!=-1 && enableUnselect)
-										)
-			) {
-			reverseAdd = true;
-			startweekdate = startweekdate.add(Date.DAY,amount-1);
-			dateAdder = -1;
-		}
+				
+				enableUnselect=true;	
+				if (this.disablePartialUnselect) {
+					var teststartweekdate = startweekdate;
+					for (var k=0;k<amount;++k) {
+		//check, if the whole set is still selected, then make unselection possible again
+						curmonth = teststartweekdate.getMonth();		
+						if ((amount == 7 || curmonth === startmonth) && this.preSelectedDates.indexOf(teststartweekdate.clearTime().getTime())==-1) {
+							enableUnselect=false;
+							break;
+						}
+						teststartweekdate = teststartweekdate.add(Date.DAY,1);
+					}
+				}
 		
-		this.maxNotified = false;
-		for (var i=0,ni;i<amount;i++) {
-			curmonth = startweekdate.getMonth();
-			ni = (reverseAdd ? amount-1-i : i);
-			if (amount == 7 || curmonth === startmonth) {
-				this.markDateAsSelected(startweekdate.clearTime().getTime(),true,monthcell,daycell+ni,enableUnselect);
+				var reverseAdd =  false;
+				var dateAdder = 1;
+				if (this.strictRangeSelect &&	(
+													(this.preSelectedDates.indexOf(startweekdate.add(Date.DAY,-1).clearTime().getTime())==-1 && !enableUnselect) ||
+													(this.preSelectedDates.indexOf(startweekdate.add(Date.DAY,-1).clearTime().getTime())!=-1 && enableUnselect)
+												)
+					) {
+					reverseAdd = true;
+					startweekdate = startweekdate.add(Date.DAY,amount-1);
+					dateAdder = -1;
+				}
+				
+				this.maxNotified = false;
+				for (var i=0,ni;i<amount;++i) {
+					curmonth = startweekdate.getMonth();
+					ni = (reverseAdd ? amount-1-i : i);
+					if (amount == 7 || curmonth === startmonth) {
+						this.markDateAsSelected(startweekdate.clearTime().getTime(),true,monthcell,daycell+ni,enableUnselect);
+					}
+					startweekdate = startweekdate.add(Date.DAY,dateAdder);
+				}
+				if (amount==42) {
+					this.fireEvent("aftermonthclick", this, startmonth,this.lastStateWasSelected);
+				}
+				else {
+					this.fireEvent("afterweekclick", this, new Date(t.dateValue).getFirstDateOfWeek(this.startDay),this.lastStateWasSelected);
+				}
 			}
-			startweekdate = startweekdate.add(Date.DAY,dateAdder);
-		}
-		if (amount==42) {
-			this.fireEvent("aftermonthclick", this, startmonth,this.lastStateWasSelected);
-		}
-		else {
-			this.fireEvent("afterweekclick", this, new Date(t.dateValue).getFirstDateOfWeek(this.startDay),this.lastStateWasSelected);
 		}
 	},
 
 	markDateAsSelected : function(t,fakeCTRL,monthcell,daycell,enableUnselect) {
 		var currentGetCell = Ext.get(this.cellsArray[monthcell].elements[daycell]);
+	
+		if ((currentGetCell.hasClass("x-date-prevday") || currentGetCell.hasClass("x-date-nextday") ) && this.prevNextDaysView!=="mark") {		
+			return false;
+		}
+
 		if (this.multiSelection && (Ext.EventObject.ctrlKey || fakeCTRL)) {
 			var beforeDate = new Date(t).add(Date.DAY,-1).clearTime().getTime();
 			var afterDate = new Date(t).add(Date.DAY,1).clearTime().getTime();				
@@ -1663,38 +1779,40 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 	},
 
 	markGhostDatesAlso : function(monthcell,daycell,remove) {
-		var currentGetCell = Ext.get(this.cellsArray[monthcell].elements[daycell]), dayCellDiff;
-		if(currentGetCell.hasClass("x-date-prevday") && monthcell>0) {
-			dayCellDiff = (5-Math.floor(daycell/7))*7;
-			if(Ext.get(this.cellsArray[monthcell-1].elements[daycell+dayCellDiff]).hasClass("x-date-nextday")) {
-				dayCellDiff-=7;
+		if (this.prevNextDaysView=="mark") {
+			var currentGetCell = Ext.get(this.cellsArray[monthcell].elements[daycell]), dayCellDiff;
+			if(currentGetCell.hasClass("x-date-prevday") && monthcell>0) {
+				dayCellDiff = (5-Math.floor(daycell/7))*7;
+				if(Ext.get(this.cellsArray[monthcell-1].elements[daycell+dayCellDiff]).hasClass("x-date-nextday")) {
+					dayCellDiff-=7;
+				}
+				this.markSingleDays(monthcell-1,daycell+dayCellDiff,remove);
 			}
-			this.markSingleDays(monthcell-1,daycell+dayCellDiff,remove);
-		}
-		else if(currentGetCell.hasClass("x-date-nextday") && monthcell<this.cellsArray.length-1) {
-			dayCellDiff = 28;
-			if(this.cellsArray[monthcell].elements[daycell].firstChild.firstChild.firstChild.innerHTML != this.cellsArray[monthcell+1].elements[daycell-dayCellDiff].firstChild.firstChild.firstChild.innerHTML) {
-				dayCellDiff=35;
-			}
-			this.markSingleDays(monthcell+1,daycell-dayCellDiff,remove);
-		}
-		else if(currentGetCell.hasClass("x-date-active") && ((daycell < 14 && monthcell>0) || (daycell > 27 && monthcell<this.cellsArray.length-1))){
-			if (daycell<14) {
+			else if(currentGetCell.hasClass("x-date-nextday") && monthcell<this.cellsArray.length-1) {
 				dayCellDiff = 28;
-				if(!Ext.get(this.cellsArray[monthcell-1].elements[daycell+dayCellDiff]).hasClass("x-date-nextday")) {
+				if(this.cellsArray[monthcell].elements[daycell].firstChild.firstChild.firstChild.innerHTML != this.cellsArray[monthcell+1].elements[daycell-dayCellDiff].firstChild.firstChild.firstChild.innerHTML) {
 					dayCellDiff=35;
 				}
-				if(daycell+dayCellDiff < 42 && this.cellsArray[monthcell].elements[daycell].firstChild.firstChild.firstChild.innerHTML == this.cellsArray[monthcell-1].elements[daycell+dayCellDiff].firstChild.firstChild.firstChild.innerHTML) {
-					this.markSingleDays(monthcell-1,daycell+dayCellDiff,remove);
-				}
+				this.markSingleDays(monthcell+1,daycell-dayCellDiff,remove);
 			}
-			else {
-				dayCellDiff = 28;
-				if(!Ext.get(this.cellsArray[monthcell+1].elements[daycell-dayCellDiff]).hasClass("x-date-prevday")) {
-					dayCellDiff=35;
+			else if(currentGetCell.hasClass("x-date-active") && ((daycell < 14 && monthcell>0) || (daycell > 27 && monthcell<this.cellsArray.length-1))){
+				if (daycell<14) {
+					dayCellDiff = 28;
+					if(!Ext.get(this.cellsArray[monthcell-1].elements[daycell+dayCellDiff]).hasClass("x-date-nextday")) {
+						dayCellDiff=35;
+					}
+					if(daycell+dayCellDiff < 42 && this.cellsArray[monthcell].elements[daycell].firstChild.firstChild.firstChild.innerHTML == this.cellsArray[monthcell-1].elements[daycell+dayCellDiff].firstChild.firstChild.firstChild.innerHTML) {
+						this.markSingleDays(monthcell-1,daycell+dayCellDiff,remove);
+					}
 				}
-				if(daycell-dayCellDiff >= 0 && this.cellsArray[monthcell].elements[daycell].firstChild.firstChild.firstChild.innerHTML == this.cellsArray[monthcell+1].elements[daycell-dayCellDiff].firstChild.firstChild.firstChild.innerHTML) {
-					this.markSingleDays(monthcell+1,daycell-dayCellDiff,remove);
+				else {
+					dayCellDiff = 28;
+					if(!Ext.get(this.cellsArray[monthcell+1].elements[daycell-dayCellDiff]).hasClass("x-date-prevday")) {
+						dayCellDiff=35;
+					}
+					if(daycell-dayCellDiff >= 0 && this.cellsArray[monthcell].elements[daycell].firstChild.firstChild.firstChild.innerHTML == this.cellsArray[monthcell+1].elements[daycell-dayCellDiff].firstChild.firstChild.firstChild.innerHTML) {
+						this.markSingleDays(monthcell+1,daycell-dayCellDiff,remove);
+					}
 				}
 			}
 		}
@@ -1702,11 +1820,10 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 	
 	
 	removeAllPreselectedClasses : function() {
-		Ext.each(this.preSelectedCells,function(c){
-			var position = c.split("#");
+		for (var e=0,el=this.preSelectedCells.length;e<el;++e) {												
+			var position = this.preSelectedCells[e].split("#");
 			Ext.get(this.cellsArray[position[0]].elements[position[1]]).removeClass("x-date-selected");
-
-		},this);
+		}
 		this.preSelectedDates = [];
 		this.preSelectedCells = [];
 	},
@@ -1716,129 +1833,130 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		e.stopEvent();
 		var tp = Ext.fly(t.parentNode);
 
-        if(t.dateValue && !tp.hasClass("x-date-disabled") && !tp.hasClass("x-datepickerplus-eventdates-disabled")){
-		
-			var eO = Ext.EventObject;
-			if ((!eO.ctrlKey && this.multiSelectByCTRL) || eO.shiftKey || !this.multiSelection) {
-				this.removeAllPreselectedClasses();
-			}
-			var ctrlfaker = (((!eO.ctrlKey && !this.multiSelectByCTRL) || eO.shiftKey) && this.multiSelection ? true:false);
-
-
-			if (eO.shiftKey && this.multiSelection && this.lastSelectedDate) {
-				var startdate = this.lastSelectedDate;
-				var targetdate = t.dateValue;
-				var dayDiff = (startdate<targetdate? 1:-1);
-				var lsdCell = this.lastSelectedDateCell.split("#");
-				var tmpMonthCell = parseInt(lsdCell[0],10);
-				var tmpDayCell = parseInt(lsdCell[1],10);
-				var testCell,ghostCounter=0,ghostplus=0;
-
-				this.maxNotified = false;
-
-
-
-//startdate lies in nonvisible month ?
-				var firstVisibleDate = this.activeDate.getFirstDateOfMonth().clearTime().getTime();
-				var lastVisibleDate = this.activeDate.add(Date.MONTH,this.noOfMonth-1).getLastDateOfMonth().clearTime().getTime();
-
-				if (startdate<firstVisibleDate ||
-					startdate>lastVisibleDate) {
-			
-//prepare for disabledCheck
-					var min = this.minDate ? this.minDate.clearTime().getTime() : Number.NEGATIVE_INFINITY;
-					var max = this.maxDate ? this.maxDate.clearTime().getTime() : Number.POSITIVE_INFINITY;
-					var ddays = this.disabledDays ? this.disabledDays.join("") : "";
-					var ddMatch = this.disabledDatesRE;
-					var format = this.format;
-					var allowedDatesT =  this.allowedDates ? this.allowedDatesT : false;
-					var d,ddMatchResult,fvalue;
-//check, if the days would be disabled
-					while(startdate<firstVisibleDate || startdate>lastVisibleDate) {
-						d=new Date(startdate);
-
-						ddMatchResult = false;
-						if(ddMatch){
-							fvalue = d.dateFormat(format);
-							ddMatchResult = ddMatch.test(fvalue);
-						}
-//don't use >= and <= here for datecomparison, because the dates can differ in timezone
-						if(	!(startdate < min) &&
-							!(startdate > max) &&
-							ddays.indexOf(d.getDay()) == -1 &&
-							!ddMatchResult &&
-							( !allowedDatesT || allowedDatesT.indexOf(startdate)!=-1 )
-						   ) {
-//is not disabled and can be processed
-
-							if (this.maxSelectionDays === this.preSelectedDates.length) {
-						        if(this.fireEvent("beforemaxdays", this) !== false){								
-									Ext.Msg.alert(this.maxSelectionDaysTitle,this.maxSelectionDaysText.replace(/%0/,this.maxSelectionDays));
-								}
-								break;
+        if(!this.disabled && t.dateValue && !tp.hasClass("x-date-disabled") && !tp.hasClass("x-datepickerplus-eventdates-disabled") && this.fireEvent("beforedateclick", this,e) !== false){
+			if (( !tp.hasClass("x-date-prevday") && !tp.hasClass("x-date-nextday") ) || this.prevNextDaysView=="mark") {
+				var eO = Ext.EventObject;
+				if ((!eO.ctrlKey && this.multiSelectByCTRL) || eO.shiftKey || !this.multiSelection) {
+					this.removeAllPreselectedClasses();
+				}
+				var ctrlfaker = (((!eO.ctrlKey && !this.multiSelectByCTRL) || eO.shiftKey) && this.multiSelection ? true:false);
+	
+	
+				if (eO.shiftKey && this.multiSelection && this.lastSelectedDate) {
+					var startdate = this.lastSelectedDate;
+					var targetdate = t.dateValue;
+					var dayDiff = (startdate<targetdate? 1:-1);
+					var lsdCell = this.lastSelectedDateCell.split("#");
+					var tmpMonthCell = parseInt(lsdCell[0],10);
+					var tmpDayCell = parseInt(lsdCell[1],10);
+					var testCell,ghostCounter=0,ghostplus=0;
+	
+					this.maxNotified = false;
+	
+	
+	
+	//startdate lies in nonvisible month ?
+					var firstVisibleDate = this.activeDate.getFirstDateOfMonth().clearTime().getTime();
+					var lastVisibleDate = this.activeDate.add(Date.MONTH,this.noOfMonth-1).getLastDateOfMonth().clearTime().getTime();
+	
+					if (startdate<firstVisibleDate ||
+						startdate>lastVisibleDate) {
+				
+	//prepare for disabledCheck
+						var min = this.minDate ? this.minDate.clearTime().getTime() : Number.NEGATIVE_INFINITY;
+						var max = this.maxDate ? this.maxDate.clearTime().getTime() : Number.POSITIVE_INFINITY;
+						var ddays = this.disabledDays ? this.disabledDays.join("") : "";
+						var ddMatch = this.disabledDatesRE;
+						var format = this.format;
+						var allowedDatesT =  this.allowedDates ? this.allowedDatesT : false;
+						var d,ddMatchResult,fvalue;
+	//check, if the days would be disabled
+						while(startdate<firstVisibleDate || startdate>lastVisibleDate) {
+							d=new Date(startdate);
+	
+							ddMatchResult = false;
+							if(ddMatch){
+								fvalue = d.dateFormat(format);
+								ddMatchResult = ddMatch.test(fvalue);
 							}
-							this.preSelectedDates.push(startdate);
-
+	//don't use >= and <= here for datecomparison, because the dates can differ in timezone
+							if(	!(startdate < min) &&
+								!(startdate > max) &&
+								ddays.indexOf(d.getDay()) == -1 &&
+								!ddMatchResult &&
+								( !allowedDatesT || allowedDatesT.indexOf(startdate)!=-1 )
+							   ) {
+	//is not disabled and can be processed
+	
+								if (this.maxSelectionDays === this.preSelectedDates.length) {
+									if(this.fireEvent("beforemaxdays", this) !== false){								
+										Ext.Msg.alert(this.maxSelectionDaysTitle,this.maxSelectionDaysText.replace(/%0/,this.maxSelectionDays));
+									}
+									break;
+								}
+								this.preSelectedDates.push(startdate);
+	
+							}
+							startdate = new Date(startdate).add(Date.DAY,dayDiff).clearTime().getTime();
 						}
+					
+						tmpMonthCell = (dayDiff>0 ? 0 : this.cellsArray.length-1);
+						tmpDayCell = (dayDiff>0 ? 0 : 41);
+	
+	//mark left ghostdates aswell
+						testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
+						while (testCell.hasClass("x-date-prevday") || testCell.hasClass("x-date-nextday")) {
+							testCell.addClass("x-date-selected");
+							this.preSelectedCells.push((tmpMonthCell)+"#"+(tmpDayCell));
+							tmpDayCell+=dayDiff;
+							testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
+						}
+					}
+					
+	//mark range of visible dates
+					while ((targetdate-startdate)*dayDiff >0 && tmpMonthCell>=0 && tmpMonthCell<this.cellsArray.length) {									
+						this.markDateAsSelected(startdate,ctrlfaker,tmpMonthCell,tmpDayCell,true);
+	
+	//take care of summertime changing (would return different milliseconds)
 						startdate = new Date(startdate).add(Date.DAY,dayDiff).clearTime().getTime();
-					}
-				
-					tmpMonthCell = (dayDiff>0 ? 0 : this.cellsArray.length-1);
-					tmpDayCell = (dayDiff>0 ? 0 : 41);
-
-//mark left ghostdates aswell
-					testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
-					while (testCell.hasClass("x-date-prevday") || testCell.hasClass("x-date-nextday")) {
-						testCell.addClass("x-date-selected");
-						this.preSelectedCells.push((tmpMonthCell)+"#"+(tmpDayCell));
+										
+						testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
+	
+						if (testCell.hasClass("x-date-active")) {
+							ghostCounter=0;						
+						}
+						else {
+							ghostCounter++;
+						}
 						tmpDayCell+=dayDiff;
-						testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
-					}
-				}
-				
-//mark range of visible dates
-				while ((targetdate-startdate)*dayDiff >0 && tmpMonthCell>=0 && tmpMonthCell<this.cellsArray.length) {									
-					this.markDateAsSelected(startdate,ctrlfaker,tmpMonthCell,tmpDayCell,true);
-
-//take care of summertime changing (would return different milliseconds)
-					startdate = new Date(startdate).add(Date.DAY,dayDiff).clearTime().getTime();
-									
-					testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
-
-					if (testCell.hasClass("x-date-active")) {
-						ghostCounter=0;						
-					}
-					else {
-						ghostCounter++;
-					}
-					tmpDayCell+=dayDiff;
-					if (tmpDayCell==42) {
-						tmpMonthCell++;
-						tmpDayCell=(ghostCounter>=7?14:7);
-					}
-					else if (tmpDayCell<0) {
-						tmpMonthCell--;
-						tmpDayCell=34;
-						
-						testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
-						if (testCell.hasClass("x-date-nextday") || ghostCounter==7) {
-							tmpDayCell=27;
+						if (tmpDayCell==42) {
+							tmpMonthCell++;
+							tmpDayCell=(ghostCounter>=7?14:7);
+						}
+						else if (tmpDayCell<0) {
+							tmpMonthCell--;
+							tmpDayCell=34;
+							
+							testCell = Ext.get(this.cellsArray[tmpMonthCell].elements[tmpDayCell]);
+							if (testCell.hasClass("x-date-nextday") || ghostCounter==7) {
+								tmpDayCell=27;
+							}
 						}
 					}
+	
 				}
-
-			}
-			
-
-			this.markDateAsSelected(t.dateValue,ctrlfaker,t.monthCell,t.dayCell,true);
 				
-			this.finishDateSelection(new Date(t.dateValue));
-        }
+	
+				this.markDateAsSelected(t.dateValue,ctrlfaker,t.monthCell,t.dayCell,true);
+					
+				this.finishDateSelection(new Date(t.dateValue));
+			}
+		}
     },
 	
 	copyPreToSelectedDays : function() {
 		this.selectedDates = [];
-		for (var i=0,il=this.preSelectedDates.length;i<il;i++) {
+		for (var i=0,il=this.preSelectedDates.length;i<il;++i) {
 			this.selectedDates.push(new Date(this.preSelectedDates[i]));
 		}
 	},
@@ -1850,7 +1968,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
 	spaceKeyPressed: function(e) {
 		var ctrlfaker = (((!Ext.EventObject.ctrlKey && !this.multiSelectByCTRL) || Ext.EventObject.shiftKey) && this.multiSelection ? true:false);
-		if (this.shiftSpaceSelect == Ext.EventObject.shiftKey && this.showActiveDate) {
+		if (!this.disabled && this.shiftSpaceSelect == Ext.EventObject.shiftKey && this.showActiveDate) {
 			var adCell = this.activeDateCell.split("#");
 			var tmpMonthCell = parseInt(adCell[0],10);
 			var tmpDayCell = parseInt(adCell[1],10);
@@ -1874,7 +1992,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 	},
 
     selectToday : function(){
-        if(this.todayBtn && !this.todayBtn.disabled){
+        if(!this.disabled && this.todayBtn && !this.todayBtn.disabled){
 			var today = new Date().clearTime();
 			var todayT = today.getTime();
 		//today already visible?
@@ -1913,7 +2031,38 @@ Ext.reg('datepickerplus', Ext.ux.DatePickerPlus);
 /*
 To use DatepickerPlus in menus and datefields, DateItem and datefield needs to be rewritten. This way Ext.DateMenu stays original and by supplying new config item usePickerPlus:true will use the datepickerplus insted of the original picker. 
 */
-if (Ext.menu && Ext.menu.DateItem) {
+
+	
+if (parseInt(Ext.version.substr(0,1),10)>2) {
+//ext 3.0		
+	Ext.menu.DateItem = Ext.ux.DatePickerPlus;
+	Ext.override(Ext.menu.DateMenu,{
+		initComponent: function(){
+			this.on('beforeshow', this.onBeforeShow, this);
+			if(this.strict = (Ext.isIE7 && Ext.isStrict)){
+				this.on('show', this.onShow, this, {single: true, delay: 20});
+			}
+			var PickerWidget = (this.initialConfig.usePickerPlus ? Ext.ux.DatePickerPlus : Ext.DatePicker);
+			Ext.apply(this, {
+				plain: true,
+				showSeparator: false,
+				items: this.picker = new PickerWidget(Ext.apply({
+					internalRender: this.strict || !Ext.isIE,
+					ctCls: 'x-menu-date-item'
+				}, this.initialConfig))
+			});
+			Ext.menu.DateMenu.superclass.initComponent.call(this);
+			this.relayEvents(this.picker, ["select"]);
+			this.on('select', this.menuHide, this);
+			if(this.handler){
+				this.on('select', this.handler, this.scope || this);
+			}
+		}
+	});
+	
+}
+else {
+//ext 2.x
 	Ext.menu.DateItem = function(config){
 		if (config && config.usePickerPlus) {
 			Ext.menu.DateItem.superclass.constructor.call(this, new Ext.ux.DatePickerPlus(config), config);	//NEW LINE			
@@ -1931,8 +2080,7 @@ if (Ext.menu && Ext.menu.DateItem) {
 
 		this.picker.on("select", this.onSelect, this);
 	};
-
-
+//this breaks in ext 3.0 (Ext.menu.Adapter and Ext.menu.DateItem do not exist in ext 3.0 anymore)
 	Ext.extend(Ext.menu.DateItem, Ext.menu.Adapter,{
 		// private
 		onSelect : function(picker, date){
@@ -1940,335 +2088,346 @@ if (Ext.menu && Ext.menu.DateItem) {
 			Ext.menu.DateItem.superclass.handleClick.call(this);
 		}
 	});
+}
 
 
-	if (Ext.form && Ext.form.DateField) {
-		Ext.ux.form.DateFieldPlus = Ext.extend(Ext.form.DateField, {
-			usePickerPlus: true,
-			showWeekNumber: true,
-			eventDates: [],
-			noOfMonth : 1,
-			noOfMonthPerRow : 3,
-			nationalHolidaysCls: 'x-datepickerplus-nationalholidays',
-			markNationalHolidays:true,
-			eventDates: function(year) {
-				return [];
-			},
-			eventDatesRE : false,
-			eventDatesRECls : '',
-			eventDatesREText : '',
-			multiSelection: false,
-			multiSelectionDelimiter: ',',			
-			multiSelectByCTRL: true,	
-			fillupRows: true,
-			markWeekends:true,
-			weekendText:'',
-			weekendCls: 'x-datepickerplus-weekends',
-			weekendDays: [6,0],
-			useQuickTips: true,
-			pageKeyWarp: 1,
-			maxSelectionDays: false,
-			resizable: false,
-			renderTodayButton: true,
-			renderOkUndoButtons: true,
-			tooltipType: 'qtip',
-			allowedDates : false,
-			allowedDatesText : '',
-			renderPrevNextButtons: true,
-			renderPrevNextYearButtons: false,
-			disableMonthPicker:false,
-			showActiveDate: false,
-			shiftSpaceSelect: true,
-			disabledLetter: false,
-			allowMouseWheel:  true,
-			summarizeHeader: false,
-			stayInAllowedRange: true,
-			disableSingleDateSelection: false,
-			eventDatesSelectable: false,
-			styleDisabledDates: false,
+if (Ext.form && Ext.form.DateField) {
+	Ext.ux.form.DateFieldPlus = Ext.extend(Ext.form.DateField, {
+		usePickerPlus: true,
+		showWeekNumber: true,
+		noOfMonth : 1,
+		noOfMonthPerRow : 3,
+		nationalHolidaysCls: 'x-datepickerplus-nationalholidays',
+		markNationalHolidays:true,
+		eventDates: function(year) {
+			return [];
+		},
+		eventDatesRE : false,
+		eventDatesRECls : '',
+		eventDatesREText : '',
+		multiSelection: false,
+		multiSelectionDelimiter: ',',			
+		multiSelectByCTRL: true,	
+		fillupRows: true,
+		markWeekends:true,
+		weekendText:'',
+		weekendCls: 'x-datepickerplus-weekends',
+		weekendDays: [6,0],
+		useQuickTips: true,
+		pageKeyWarp: 1,
+		maxSelectionDays: false,
+		resizable: false,
+		renderTodayButton: true,
+		renderOkUndoButtons: true,
+		tooltipType: 'qtip',
+		allowedDates : false,
+		allowedDatesText : '',
+		renderPrevNextButtons: true,
+		renderPrevNextYearButtons: false,
+		disableMonthPicker:false,
+		showActiveDate: false,
+		shiftSpaceSelect: true,
+		disabledLetter: false,
+		allowMouseWheel:  true,
+		summarizeHeader: false,
+		stayInAllowedRange: true,
+		disableSingleDateSelection: false,
+		eventDatesSelectable: false,
+		styleDisabledDates: false,
 
-			allowOtherMenus: false,
+		allowOtherMenus: false,
 
-			onBeforeYearChange : function(picker, oldStartYear, newStartYear){
-				this.fireEvent("beforeyearchange", this, oldStartYear, newStartYear, picker);
-			},
-			
-			onAfterYearChange : function(picker, oldStartYear, newStartYear){
-				this.fireEvent("afteryearchange", this, oldStartYear, newStartYear, picker);
-			},
-			
-			onBeforeMonthChange : function(picker, oldStartMonth, newStartMonth){
-				this.fireEvent("beforemonthchange", this, oldStartMonth, newStartMonth, picker);
-			},
-			
-			onAfterMonthChange : function(picker, oldStartMonth, newStartMonth){
-				this.fireEvent("aftermonthchange", this, oldStartMonth, newStartMonth, picker);
-			},
-			
-			onAfterMonthClick : function(picker, month, wasSelected){
-				this.fireEvent("aftermonthclick", this, month, wasSelected, picker);
-			},
-			
-			onAfterWeekClick : function(picker, startOfWeek, wasSelected){
-				this.fireEvent("afterweekclick", this, startOfWeek, wasSelected, picker);
-			},
+		onBeforeYearChange : function(picker, oldStartYear, newStartYear){
+			this.fireEvent("beforeyearchange", this, oldStartYear, newStartYear, picker);
+		},
+		
+		onAfterYearChange : function(picker, oldStartYear, newStartYear){
+			this.fireEvent("afteryearchange", this, oldStartYear, newStartYear, picker);
+		},
+		
+		onBeforeMonthChange : function(picker, oldStartMonth, newStartMonth){
+			this.fireEvent("beforemonthchange", this, oldStartMonth, newStartMonth, picker);
+		},
+		
+		onAfterMonthChange : function(picker, oldStartMonth, newStartMonth){
+			this.fireEvent("aftermonthchange", this, oldStartMonth, newStartMonth, picker);
+		},
+		
+		onAfterMonthClick : function(picker, month, wasSelected){
+			this.fireEvent("aftermonthclick", this, month, wasSelected, picker);
+		},
+		
+		onAfterWeekClick : function(picker, startOfWeek, wasSelected){
+			this.fireEvent("afterweekclick", this, startOfWeek, wasSelected, picker);
+		},
 
-			onAfterDateClick : function(picker, date, wasSelected){
-				this.fireEvent("afterdateclick", this, date, wasSelected, picker);
-			},
-			
-			onBeforeMouseWheel : function(picker, event){
-				this.fireEvent("beforemousewheel", this, event, picker);
-			},
-			
-			onBeforeMaxDays : function(picker){
-				this.fireEvent("beforemaxdays", this, picker);
-			},
-			
-			onUndo : function(picker, preSelectedDates){
-				this.fireEvent("undo", this, preSelectedDates, picker);
-			},
-				
-			onTriggerClick : function(){
-				if(this.disabled){
-					return;
-				}
-				if(!this.menu){
-					this.menu = new Ext.menu.DateMenu({
-						allowOtherMenus: this.allowOtherMenus,
+		onAfterDateClick : function(picker, date, wasSelected){
+			this.fireEvent("afterdateclick", this, date, wasSelected, picker);
+		},
+		
+		onBeforeMouseWheel : function(picker, event){
+			this.fireEvent("beforemousewheel", this, event, picker);
+		},
+		
+		onBeforeMaxDays : function(picker){
+			this.fireEvent("beforemaxdays", this, picker);
+		},
+		
+		onUndo : function(picker, preSelectedDates){
+			this.fireEvent("undo", this, preSelectedDates, picker);
+		},
+
+		onTriggerClick : function(){
+			if(this.disabled){
+				return;
+			}
+			if(!this.menu){
+				this.menu = new Ext.menu.DateMenu({
+					allowOtherMenus: this.allowOtherMenus,
 //is needed at initialisation		
-						usePickerPlus:this.usePickerPlus,
-						noOfMonth:this.noOfMonth,
-						noOfMonthPerRow:this.noOfMonthPerRow,
-
-						listeners: {
-							'beforeyearchange': {fn:this.onBeforeYearChange,scope:this},
-							'afteryearchange': {fn:this.onAfterYearChange,scope:this},
-							'beforemonthchange': {fn:this.onBeforeMonthChange,scope:this},
-							'aftermonthchange': {fn:this.onAfterMonthChange,scope:this},
-							'afterdateclick': {fn:this.onAfterDateClick,scope:this},
-							'aftermonthclick': {fn:this.onAfterMonthClick,scope:this},
-							'afterweekclick': {fn:this.onAfterWeekClick,scope:this},
-							'beforemousewheel': {fn:this.onBeforeMouseWheel,scope:this},
-							'beforemaxdays': {fn:this.onBeforeMaxDays,scope:this},							
-							'undo': {fn:this.onUndo,scope:this}
-						}
-					});
-				}
-
-				if (this.menu.isVisible()) {
-					this.menu.hide();
-					return;
-				}
-				if (this.disabledDatesRE) {
-					this.ddMatch = this.disabledDatesRE;
-				}
-				if(typeof this.minDate == "string"){
-					this.minDate = this.parseDate(this.minDate);
-				}
-				if(typeof this.maxDate == "string"){
-					this.maxDate = this.parseDate(this.maxDate);
-				}
-				
-				Ext.apply(this.menu.picker,  {
-					minDate : this.minValue || this.minDate,
-					maxDate : this.maxValue || this.maxDate,
-					disabledDatesRE : this.ddMatch,
-					disabledDatesText : this.disabledDatesText,
-					disabledDays : this.disabledDays,
-					disabledDaysText : this.disabledDaysText,
-		            showToday : this.showToday,	//from Ext 2.2
-					format : this.format,
-					minText : String.format(this.minText, this.formatDate(this.minValue || this.minDate)),
-					maxText : String.format(this.maxText, this.formatDate(this.maxValue || this.maxDate)),
-					showWeekNumber: this.showWeekNumber,
-					nationalHolidaysCls: this.nationalHolidaysCls,
-					markNationalHolidays:this.markNationalHolidays,
-					multiSelectByCTRL: this.multiSelectByCTRL,	
-					fillupRows: this.fillupRows,
-					multiSelection: this.multiSelection,
-					markWeekends:this.markWeekends,
-					weekendText:this.weekendText,
-					weekendCls: this.weekendCls,
-					weekendDays: this.weekendDays,
-					useQuickTips: this.useQuickTips,
-					eventDates: this.eventDates,
-					eventDatesRE: this.eventDatesRE,
-					eventDatesRECls: this.eventDatesRECls,
-					eventDatesREText: this.eventDatesREText,
-					pageKeyWarp: this.pageKeyWarp,
-					maxSelectionDays: this.maxSelectionDays,
-					resizable: this.resizable,
-					renderTodayButton: this.renderTodayButton,
-					renderOkUndoButtons: this.renderOkUndoButtons,
-					allowedDates : this.allowedDates,
-					allowedDatesText : this.allowedDatesText,
-					renderPrevNextButtons: this.renderPrevNextButtons,
-					renderPrevNextYearButtons: this.renderPrevNextYearButtons,
-					disableMonthPicker:this.disableMonthPicker,
-					showActiveDate: this.showActiveDate,
-					shiftSpaceSelect: this.shiftSpaceSelect,
-					disabledLetter: this.disabledLetter,
-					allowMouseWheel: this.allowMouseWheel,
-					summarizeHeader: this.summarizeHeader,
-					stayInAllowedRange: this.stayInAllowedRange,
-					disableSingleDateSelection: this.disableSingleDateSelection,
-					eventDatesSelectable: this.eventDatesSelectable,
-					styleDisabledDates: this.styleDisabledDates
+					usePickerPlus:this.usePickerPlus,
+					noOfMonth:this.noOfMonth,
+					noOfMonthPerRow:this.noOfMonthPerRow,
+					listeners: {
+						'beforeyearchange': {fn:this.onBeforeYearChange,scope:this},
+						'afteryearchange': {fn:this.onAfterYearChange,scope:this},
+						'beforemonthchange': {fn:this.onBeforeMonthChange,scope:this},
+						'aftermonthchange': {fn:this.onAfterMonthChange,scope:this},
+						'afterdateclick': {fn:this.onAfterDateClick,scope:this},
+						'aftermonthclick': {fn:this.onAfterMonthClick,scope:this},
+						'afterweekclick': {fn:this.onAfterWeekClick,scope:this},
+						'beforemousewheel': {fn:this.onBeforeMouseWheel,scope:this},
+						'beforemaxdays': {fn:this.onBeforeMaxDays,scope:this},
+						'undo': {fn:this.onUndo,scope:this}
+					}
 				});
+//do this only once!					
+				this.relayEvents(this.menu, ["select"]);
+			}
+
+			if (this.menu.isVisible()) {
+				this.menu.hide();
+				return;
+			}
+			if (this.disabledDatesRE) {
+				this.ddMatch = this.disabledDatesRE;
+			}
+			if(typeof this.minDate == "string"){
+				this.minDate = this.parseDate(this.minDate);
+			}
+			if(typeof this.maxDate == "string"){
+				this.maxDate = this.parseDate(this.maxDate);
+			}
+			
+			Ext.apply(this.menu.picker,  {
+				minDate : this.minValue || this.minDate,
+				maxDate : this.maxValue || this.maxDate,
+				disabledDatesRE : this.ddMatch,
+				disabledDatesText : this.disabledDatesText,
+				disabledDays : this.disabledDays,
+				disabledDaysText : this.disabledDaysText,
+				showToday : this.showToday,	//from Ext 2.2
+				format : this.format,
+				minText : String.format(this.minText, this.formatDate(this.minValue || this.minDate)),
+				maxText : String.format(this.maxText, this.formatDate(this.maxValue || this.maxDate)),
+				showWeekNumber: this.showWeekNumber,
+				nationalHolidaysCls: this.nationalHolidaysCls,
+				markNationalHolidays:this.markNationalHolidays,
+				multiSelectByCTRL: this.multiSelectByCTRL,	
+				fillupRows: this.fillupRows,
+				multiSelection: this.multiSelection,
+				markWeekends:this.markWeekends,
+				weekendText:this.weekendText,
+				weekendCls: this.weekendCls,
+				weekendDays: this.weekendDays,
+				useQuickTips: this.useQuickTips,
+				eventDates: this.eventDates,
+				eventDatesRE: this.eventDatesRE,
+				eventDatesRECls: this.eventDatesRECls,
+				eventDatesREText: this.eventDatesREText,
+				pageKeyWarp: this.pageKeyWarp,
+				maxSelectionDays: this.maxSelectionDays,
+				resizable: this.resizable,
+				renderTodayButton: this.renderTodayButton,
+				renderOkUndoButtons: this.renderOkUndoButtons,
+				allowedDates : this.allowedDates,
+				allowedDatesText : this.allowedDatesText,
+				renderPrevNextButtons: this.renderPrevNextButtons,
+				renderPrevNextYearButtons: this.renderPrevNextYearButtons,
+				disableMonthPicker:this.disableMonthPicker,
+				showActiveDate: this.showActiveDate,
+				shiftSpaceSelect: this.shiftSpaceSelect,
+				disabledLetter: this.disabledLetter,
+				allowMouseWheel: this.allowMouseWheel,
+				summarizeHeader: this.summarizeHeader,
+				stayInAllowedRange: this.stayInAllowedRange,
+				disableSingleDateSelection: this.disableSingleDateSelection,
+				eventDatesSelectable: this.eventDatesSelectable,
+				styleDisabledDates: this.styleDisabledDates
+			});
+//Ext 3.0
+			if (this.menuEvents) {
+				this.menuEvents('on');
+			}
+			else {
+//ext 2.2.x				
 				this.menu.on(Ext.apply({}, this.menuListeners, {
 					scope:this
 				}));
-				this.relayEvents(this.menu, ["select"]);
-				this.menu.picker.setValue(this.getValue() || new Date());
-				this.menu.show(this.el, "tl-bl?");
-				this.menu.focus();
-			},
+			}
+			this.menu.picker.setValue(this.getValue() || new Date());
+			this.menu.show(this.el, "tl-bl?");
+			this.menu.focus();
+		},
+		
+		setValue : function(date){
+			var field = this;     
+			if (Ext.isArray(date)) {
+				var formatted = [];
+				for (var e=0,el=date.length;e<el;++e) {
+					formatted.push(field.formatDate(date[e]));
+				}
 			
-			setValue : function(date){
-				var field = this;     
-				if (Ext.isArray(date)) {
-					var formatted = [];
-					Ext.each(date, function(item, index, array) {
-						formatted.push(field.formatDate(item));
-					});
-				
-					var value = formatted.join(this.multiSelectionDelimiter);
-				
+				var value = formatted.join(this.multiSelectionDelimiter);
+			
 //bypass setValue validation on Ext.DateField
-					Ext.form.DateField.superclass.setValue.call(this, value);
-				}
-				else {
-					Ext.form.DateField.superclass.setValue.call(this, this.formatDate(this.parseDate(date)));				   
-				}
-			},
+				Ext.form.DateField.superclass.setValue.call(this, value);
+			}
+			else {
+				Ext.form.DateField.superclass.setValue.call(this, this.formatDate(this.parseDate(date)));				   
+			}
+		},
 
-			validateValue : function(value){
-				if (this.multiSelection){
-					var field = this;
-					var values = value.split(this.multiSelectionDelimiter);
-					var isValid = true;
-					Ext.each(values, function(item, index, array) {
-						if (!Ext.ux.form.DateFieldPlus.superclass.validateValue.call(field, item)) {
-							isValid = false;
-						}
-					});
-					return isValid;
-				}
-				else {
-					return Ext.ux.form.DateFieldPlus.superclass.validateValue.call(this, value);
-				}         
-			},
-
-			getValue : function() {
-				if (this.multiSelection) {
-					var value = Ext.form.DateField.superclass.getValue.call(this);
-					var field = this;					
-					var values = value.split(this.multiSelectionDelimiter);
-					var dates = [];
-					var checkDate;
-					Ext.each(values, function(item, index, array) {
-						var checkDate = field.parseDate(item);
-						if (checkDate) {
-							dates.push(checkDate);
-						}
-					});
-					return (dates.length>0?dates:"");
-				}
-				else {
-					return Ext.ux.form.DateFieldPlus.superclass.getValue.call(this);
-				}
-			},			
-
-
-			beforeBlur : function(){
-				if (this.multiSelection) {
-					this.setValue(this.getRawValue().split(this.multiSelectionDelimiter));
-				}
-				else {
-					var v = this.parseDate(this.getRawValue());
-					if(v){
-						this.setValue(v);
+		validateValue : function(value){
+			if (this.multiSelection){
+				var field = this;
+				var values = value.split(this.multiSelectionDelimiter);
+				var isValid = true;
+				for (var e=0,el=values.length;e<el;++e) {											  
+					if (!Ext.ux.form.DateFieldPlus.superclass.validateValue.call(field, values[e])) {
+						isValid = false;
 					}
 				}
-			},
+				return isValid;
+			}
+			else {
+				return Ext.ux.form.DateFieldPlus.superclass.validateValue.call(this, value);
+			}         
+		},
 
-
-			
-			submitFormat:'Y-m-d',
-			submitFormatAddon: '-format',			
-			onRender:function() {
-		
-				Ext.ux.form.DateFieldPlus.superclass.onRender.apply(this, arguments);
-//be sure not to have duplicate formfield names (at least IE moans about it and gets confused)				
-//				this.name =  (typeof this.name==="undefined"?this.id+this.submitFormatAddon:(this.name==this.id?this.name+this.submitFormatAddon:this.name));		
-				var name =  this.name || this.el.dom.name || (this.id+this.submitFormatAddon);
-				if (name==this.id) {
-					name+= this.submitFormatAddon;
-				}
-				this.hiddenField = this.el.insertSibling({
-					tag:'input',
-					type:'hidden',
-					name: name,
-					value:this.formatHiddenDate(this.parseDate(this.value))
-				});
-				this.hiddenName = name;
-				this.el.dom.removeAttribute('name');
-				this.el.on({
-					 keyup:{scope:this, fn:this.updateHidden}
-					,blur:{scope:this, fn:this.updateHidden}
-				});
-		
-				this.setValue = this.setValue.createSequence(this.updateHidden);
-				
-				if(this.tooltip){
-					if(typeof this.tooltip == 'object'){
-						Ext.QuickTips.register(Ext.apply({
-							  target: this.trigger
-						}, this.tooltip));
-					} else {
-						this.trigger.dom[this.tooltipType] = this.tooltip;
+		getValue : function() {
+			if (this.multiSelection) {
+				var value = Ext.form.DateField.superclass.getValue.call(this);
+				var field = this;					
+				var values = value.split(this.multiSelectionDelimiter);
+				var dates = [];
+				for (var e=0,el=values.length;e<el;++e) {											  
+					var checkDate = field.parseDate(values[e]);
+					if (checkDate) {
+						dates.push(checkDate);
 					}
 				}
-				
-		
-			},
-			onDisable: function(){
-				Ext.ux.form.DateFieldPlus.superclass.onDisable.apply(this, arguments);
-				if(this.hiddenField) {
-					this.hiddenField.dom.setAttribute('disabled','disabled');
-				}
-			},
-			
-			onEnable: function(){
-				Ext.ux.form.DateFieldPlus.superclass.onEnable.apply(this, arguments);
-				if(this.hiddenField) {
-					this.hiddenField.dom.removeAttribute('disabled');
-				}
-			},
-			
-			formatHiddenDate : function(date){
-				return Ext.isDate(date) ? Ext.util.Format.date(date, this.submitFormat) : date;
-			},
-			
-			updateHidden:function(date) {
-				var field = this;     
-				if (Ext.isArray(date)) {
-					var formatted = [];
-					Ext.each(date, function(item, index, array) {
-						formatted.push(field.formatHiddenDate(item));
-					});
-				
-					var value = formatted.join(this.multiSelectionDelimiter);
-					this.hiddenField.dom.value = value;
-				}
-				else {
-					this.hiddenField.dom.value = this.formatHiddenDate(this.getValue());
+				return (dates.length>0?dates:"");
+			}
+			else {
+				return Ext.ux.form.DateFieldPlus.superclass.getValue.call(this);
+			}
+		},			
+
+
+		beforeBlur : function(){
+			if (this.multiSelection) {
+				this.setValue(this.getRawValue().split(this.multiSelectionDelimiter));
+			}
+			else {
+				var v = this.parseDate(this.getRawValue());
+				if(v){
+					this.setValue(v);
 				}
 			}
+		},
 
-		});
-		Ext.reg('datefieldplus', Ext.ux.form.DateFieldPlus);
-	}
 
+		
+		submitFormat:'Y-m-d',
+		submitFormatAddon: '-format',			
+		onRender:function() {
+	
+			Ext.ux.form.DateFieldPlus.superclass.onRender.apply(this, arguments);
+//be sure not to have duplicate formfield names (at least IE moans about it and gets confused)				
+//				this.name =  (typeof this.name==="undefined"?this.id+this.submitFormatAddon:(this.name==this.id?this.name+this.submitFormatAddon:this.name));		
+			var name =  this.name || this.el.dom.name || (this.id+this.submitFormatAddon);
+			if (name==this.id) {
+				name+= this.submitFormatAddon;
+			}
+			this.hiddenField = this.el.insertSibling({
+				tag:'input',
+				type:'hidden',
+				name: name,
+				value:this.formatHiddenDate(this.parseDate(this.value))
+			});
+			this.hiddenName = name;
+			this.el.dom.removeAttribute('name');
+			this.el.on({
+				keyup:{scope:this, fn:this.updateHidden},
+				blur:{scope:this, fn:this.updateHidden}
+			});
+	
+			this.setValue = this.setValue.createSequence(this.updateHidden);
+			
+			if(this.tooltip){
+				if(typeof this.tooltip == 'object'){
+					Ext.QuickTips.register(Ext.apply({
+						  target: this.trigger
+					}, this.tooltip));
+				} else {
+					this.trigger.dom[this.tooltipType] = this.tooltip;
+				}
+			}
+			
+	
+		},
+		onDisable: function(){
+			Ext.ux.form.DateFieldPlus.superclass.onDisable.apply(this, arguments);
+			if(this.hiddenField) {
+				this.hiddenField.dom.setAttribute('disabled','disabled');
+			}
+		},
+		
+		onEnable: function(){
+			Ext.ux.form.DateFieldPlus.superclass.onEnable.apply(this, arguments);
+			if(this.hiddenField) {
+				this.hiddenField.dom.removeAttribute('disabled');
+			}
+		},
+		
+		formatHiddenDate : function(date){
+			return Ext.isDate(date) ? Ext.util.Format.date(date, this.submitFormat) : date;
+		},
+		
+		formatMultiHiddenDate : function(date) {
+			var field = this, formatted = [],value;
+			for (var e=0,el=date.length;e<el;++e) {
+				formatted.push(field.formatHiddenDate(date[e]));
+			}
+			value = formatted.join(this.multiSelectionDelimiter);
+			this.hiddenField.dom.value = value;
+		},
+		
+		updateHidden:function(date) {
+			if (Ext.isArray(date)) {
+				this.formatMultiHiddenDate(date);
+			}
+			else {
+				var value = this.getValue();
+				if (Ext.isArray(value)) {
+					this.formatMultiHiddenDate(value);
+				} else {
+					this.hiddenField.dom.value = this.formatHiddenDate(value);
+				}
+			}
+		}
+
+	});
+	Ext.reg('datefieldplus', Ext.ux.form.DateFieldPlus);
 }

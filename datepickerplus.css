@@ -34,6 +34,7 @@ th.x-date-weeknumber-header a:hover,
 }
 
 
+
 /* Fix for Firefox 3 */
 .x-date-pickerplus .x-date-middle {
 	width: 120px;
@@ -144,5 +145,10 @@ th.x-date-weeknumber-header a:hover,
 .x-datepickerplus-ie .x-date-pickerplus .x-date-inner .x-date-selected a em,
 .x-datepickerplus-ie .x-date-pickerplus .x-date-inner .x-date-selected a em span {
 	height:17px !important;
+}
+
+.x-date-pickerplus-prevnexthide .x-date-nextday,
+.x-date-pickerplus-prevnexthide .x-date-prevday {
+	visibility:hidden !important;
 }
 
