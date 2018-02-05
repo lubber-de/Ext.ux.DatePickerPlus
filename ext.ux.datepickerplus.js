@@ -3,12 +3,12 @@
   * Ext.ux.form.DateFieldPlus  Addon  
   *
   * @author    Marco Wienkoop (wm003/lubber)
-  * @copyright (c) 2008-2010, Marco Wienkoop (marco.wienkoop@lubber.de) http://www.lubber.de
+  * @copyright (c) 2008-2018, Marco Wienkoop (marco.wienkoop@lubber.de) http://www.lubber.de
   *
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
   *
-  * v.1.4.3
+  * v.1.4.6
   *
   * @class Ext.ux.form.DateFieldPlus
   * @extends Ext.form.DateField
@@ -86,6 +86,21 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.4.6 [2018/02/05]
+- support option "clickRepeaterConfig" to supply clickrepeater options for prevnext trigger buttons
+
+v.1.4.5 [2012/03/08]
+- respect minDate/maxDate on prevnext trigger buttons
+- add minDate/maxDate to minText/maxText in Datepicker Core
+
+v.1.4.4 [2012/03/08]
+- fixed prevNextButtons when switching on days between summer/wintertime
+- checked to work with ExtJS 3.4.0
+- added an optional deleteTrigger on Datefield
+- BUGFIX: setMinDate throws Error, when value was not defined
+- TBD BUGFIX: summarizeHeader got more height when showWeekNumber was set to false
+- TBD BUGFIX: a white gap column appeared when showWeekNumber was set to false (only on latest chromium?)
+
 v.1.4.3 [2011/03/18]
 - BUGFIX: Config wasn't set when used in Editorgridpanel
 
@@ -413,7 +428,7 @@ Ext.namespace('Ext.ux','Ext.ux.form');
  */
 Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 								   
-	version: "1.4",
+	version: "1.4.6",
     /**
     * @cfg {Number} noOfMonth
     * No of Month to be displayed
@@ -462,6 +477,8 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
 	defaultEventDatesText : '',
 	defaultEventDatesCls : 'x-datepickerplus-eventdates',
+	
+	clickRepeaterConfig: {},
 	
 	setEventDates : function(edArray,update) {
 		if (typeof update === "undefined") {
@@ -1036,8 +1053,8 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
         this.el = Ext.get(el);        
         this.eventEl = Ext.get(el.firstChild);
-
 		if (this.renderPrevNextButtons) {
+		
 			this.leftClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-left a.npm"), {
 				handler: this.showPrevMonth,
 				scope: this,
@@ -1045,7 +1062,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				stopDefault:true
 			});
 	
-			this.rightClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-right a.npm"), {
+			this.rightClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-right a.npm"),{
 				handler: this.showNextMonth,
 				scope: this,
 				preventDefault:true,
@@ -1350,7 +1367,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		}
 		
 		if (forceRefresh) {
-			var ad = this.activeDate;
+			var ad = new Date(this.activeDate.getTime());
 			this.activeDate = null;
 			date = ad;			
 		}				
@@ -1416,6 +1433,10 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				this.allowedDatesT.push(this.allowedDates[k].clearTime().getTime());
 			}
 		}
+		
+		this.minTextDetail = String.format(this.minText, Ext.form.DateField.prototype.formatDate(this.minValue || this.minDate));
+		this.maxTextDetail = String.format(this.maxText, Ext.form.DateField.prototype.formatDate(this.maxValue || this.maxDate));
+
 		var setCellClass = function(cal, cell,textnode,d){
 	
 			var foundday, eCell = Ext.get(cell), eTextNode = Ext.get(textnode), t = d.getTime(), tiptext=false, fvalue;
@@ -1437,11 +1458,11 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			// disabling
 			if(t < min) {
 				cell.className = " x-date-disabled";
-				tiptext = cal.minText;				
+				tiptext = cal.minTextDetail;				
 			}
 			if(t > max) {
 				cell.className = " x-date-disabled";
-				tiptext = cal.maxText;
+				tiptext = cal.maxTextDetail;
 			}
 			if(ddays){
 				if(ddays.indexOf(d.getDay()) != -1){
@@ -2199,10 +2220,11 @@ else {
 if (Ext.form && Ext.form.DateField) {
 	Ext.ux.form.DateFieldPlus = Ext.extend(Ext.form.DateField, {
 		showPrevNextTrigger:false,
+		clickRepeaterConfig: {},
 		prevNextTriggerType: 1,
 		onPrevTriggerRelease: null,
 		onNextTriggerRelease: null,
-										   
+		showDeleteTrigger:true,
 		usePickerPlus: true,
 		showWeekNumber: true,
 		noOfMonth : 1,
@@ -2350,8 +2372,6 @@ if (Ext.form && Ext.form.DateField) {
 				disabledDaysText : this.disabledDaysText,
 				showToday : this.showToday,	//from Ext 2.2
 				format : this.format,
-				minText : String.format(this.minText, this.formatDate(this.minValue || this.minDate)),
-				maxText : String.format(this.maxText, this.formatDate(this.maxValue || this.maxDate)),
 				showWeekNumber: this.showWeekNumber,
 				nationalHolidaysCls: this.nationalHolidaysCls,
 				markNationalHolidays:this.markNationalHolidays,
@@ -2386,7 +2406,8 @@ if (Ext.form && Ext.form.DateField) {
 				disableSingleDateSelection: this.disableSingleDateSelection,
 				eventDatesSelectable: this.eventDatesSelectable,
 				styleDisabledDates: this.styleDisabledDates,
-				prevNextDaysView : this.prevNextDaysView
+				prevNextDaysView : this.prevNextDaysView,
+				clickRepeaterConfig : this.clickRepeaterConfig
 			});
 
 			this.menu.picker.on("select",function(dp,date) {
@@ -2457,7 +2478,7 @@ if (Ext.form && Ext.form.DateField) {
 
 		getValue : function() {
 			if (this.multiSelection) {
-				var value = Ext.form.DateField.superclass.getValue.call(this);
+				var value = Ext.form.DateField.superclass.getValue.call(this) || "";
 				var field = this;					
 				var values = value.split(this.multiSelectionDelimiter);
 				var dates = [],e=0,el=values.length;
@@ -2499,6 +2520,9 @@ if (Ext.form && Ext.form.DateField) {
 			if (this.showPrevNextTrigger && !this.multiSelection) {
 				allTriggerWidths+= this.prevTrigger.getWidth()+this.nextTrigger.getWidth();
 			}
+			if (this.showDeleteTrigger) {
+//				allTriggerWidths+= this.deleteTrigger.getWidth();
+			}
 			if(!isNaN(w)){
 				this.el.setWidth(w - tw);				
 			}
@@ -2534,7 +2558,7 @@ if (Ext.form && Ext.form.DateField) {
 					this.trigger.addClass("x-datepickerplus-prevnext-ext3-date");
 				}
 
-				this.prevTrigRpt = new Ext.util.ClickRepeater(this.prevTrigger, {
+				this.prevTrigRpt = new Ext.util.ClickRepeater(this.prevTrigger, Ext.apply({},this.clickRepeaterConfig,{
 					handler: function(el) {
 						var old = this.getValue(),nxt=new Date();
 						if (Ext.isDate(old)) {
@@ -2553,11 +2577,13 @@ if (Ext.form && Ext.form.DateField) {
 								nxt = new Date(my,mm,md);
 							}
 							else {
-								nxt = new Date(old.getTime()-(86400000*this.prevNextTriggerType));
+								nxt = new Date(old.getTime()-(86400000*this.prevNextTriggerType)+7200000);
 							}
 						}
-						this.setValue(nxt);
-						this.menu.picker.setValue([nxt]);
+						if (!this.minDate || (this.minDate && nxt >= this.minDate)) {
+							this.setValue(nxt);
+							this.menu.picker.setValue([nxt]);
+						}
 					},
 					listeners: {
 						mouseup: function(cr,e){
@@ -2572,8 +2598,8 @@ if (Ext.form && Ext.form.DateField) {
 					scope: this,
 					preventDefault:true,
 					stopDefault:true
-				});
-				this.nextTrigRpt = new Ext.util.ClickRepeater(this.nextTrigger, {
+				}));
+				this.nextTrigRpt = new Ext.util.ClickRepeater(this.nextTrigger, Ext.apply({},this.clickRepeaterConfig,{
 					handler: function(el) {
 						var old = this.getValue(),nxt=new Date();
 						if (Ext.isDate(old)) {
@@ -2592,11 +2618,13 @@ if (Ext.form && Ext.form.DateField) {
 								nxt = new Date(my,mm,md);
 							}
 							else {
-								nxt = new Date(old.getTime()+(86400000*this.prevNextTriggerType));
+								nxt = new Date(old.getTime()+(86400000*this.prevNextTriggerType)+7200000);
 							}
 						}
-						this.setValue(nxt);
-						this.menu.picker.setValue([nxt]);						
+						if (!this.maxDate || (this.maxDate && nxt <= this.maxDate)) {						
+							this.setValue(nxt);
+							this.menu.picker.setValue([nxt]);						
+						}
 					},
 					listeners: {
 						mouseup: function(cr,e){
@@ -2611,9 +2639,24 @@ if (Ext.form && Ext.form.DateField) {
 					scope: this,
 					preventDefault:true,
 					stopDefault:true
+				}));
+			}
+/*			
+			if (this.showDeleteTrigger) {
+				this.deleteTrigger = this.el.insertSibling({																			 
+					tag: "img",
+					src: Ext.BLANK_IMAGE_URL,
+					cls: "x-form-trigger x-form-clear-trigger"
+				},'after');
+				this.deleteTrigger.addClassOnOver('x-form-trigger-over');
+				this.deleteTrigger.addClassOnClick('x-form-trigger-click');
+				this.deleteTrigger.on('click',function() {
+				   alert("bvla");
+//this.setValue(nxt);
+//						this.menu.picker.setValue([nxt]);
 				});
-			}			
-
+			}
+*/			
 //be sure not to have duplicate formfield names (at least IE moans about it and gets confused)				
 //				this.name =  (typeof this.name==="undefined"?this.id+this.submitFormatAddon:(this.name==this.id?this.name+this.submitFormatAddon:this.name));		
 			var name =  this.name || this.el.dom.name || (this.id+this.submitFormatAddon);
@@ -2658,6 +2701,10 @@ if (Ext.form && Ext.form.DateField) {
 				this.nextTrigRpt.destroy();
 				this.nextTrigger.removeAllListeners();
 				this.nextTrigger.remove();
+			}
+			if(this.deleteTrigger){
+				this.deleteTrigger.removeAllListeners();
+				this.deleteTrigger.remove();
 			}
 		},
 		onDisable: function(){

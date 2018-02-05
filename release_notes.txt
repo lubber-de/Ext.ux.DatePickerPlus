@@ -2,7 +2,7 @@
   * Ext.ux.form.DateFieldPlus  Addon  
   *
   * @author    Marco Wienkoop (wm003/lubber)
-  * @copyright (c) 2008-2010, Marco Wienkoop (marco.wienkoop@lubber.de) http://www.lubber.de
+  * @copyright (c) 2008-2018, Marco Wienkoop (marco.wienkoop@lubber.de) http://www.lubber.de
   *
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
@@ -11,7 +11,7 @@
   * @extends Ext.form.DateField
   *
   
-  Version 1.4.3
+  Version 1.4.6
 
 -----------------  
 Description
@@ -65,6 +65,10 @@ API Documentation
 -----------------
 
 New config Items
+[since 1.4.6]
+"clickRepeaterConfig" (usable when showPrevNextTrigger is true)
+Provide some clickRepeaterConfig to the trigger buttons
+
 [since 1.4.2]
 "showPrevNextTrigger" (DateFieldPlus only and not with multiselection)
 To display 2 buttons next to the DateFieldPlus to select next/previous day(s)
@@ -365,6 +369,21 @@ This Widget has been tested on Firefox 2/3.x, IE6/7/8, Opera 9/10, Safari 3.1.x/
 
 
 Revision History:
+v.1.4.6 [2018/02/05]
+- support option "clickRepeaterConfig" to supply clickrepeater options for prevnext trigger buttons
+
+v.1.4.5 [2012/03/08]
+- respect minDate/maxDate on prevnext trigger buttons
+- add minDate/maxDate to minText/maxText in Datepicker Core
+
+v.1.4.4 [2012/03/08]
+- fixed prevNextButtons when switching on days between summer/wintertime
+- checked to work with ExtJS 3.4.0
+- added an optional deleteTrigger on Datefield
+- BUGFIX: setMinDate throws Error, when value was not defined
+- TBD BUGFIX: summarizeHeader got more height when showWeekNumber was set to false
+- TBD BUGFIX: a white gap column appeared when showWeekNumber was set to false (only on latest chromium?)
+
 v.1.4.3 [2011/03/18]
 - BUGFIX: Config wasn't set when used in Editorgridpanel
 
