@@ -8,7 +8,7 @@
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
   *
-  * v.1.4
+  * v.1.4.1
   *
   * @class Ext.ux.form.DateFieldPlus
   * @extends Ext.form.DateField
@@ -86,6 +86,11 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.4.1 [2010/11/09]
+- checked to work with ExtJS 3.3.0
+- Forced to update viewport on setValue
+- BUGFIX: correctly position picker in datefield with hiddenfield on IE in some cases
+
 v.1.4 [2010/04/30]
 - checked to work with ExtJS 3.2.1
 - BUGFIX: Datepickers with shown months > 1 had a white glitch obove them (thanks to radubrehar)
@@ -2075,17 +2080,23 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 	
     setValue : function(value){
 		if (Ext.isArray(value)) {
+
 			this.selectedDates = [];
 			this.preSelectedDates = [];			
 			this.setSelectedDates(value,true);
-			value = value[0];
+	        value = value[0];
+
+		}
+		else {
+			this.setSelectedDates(value,false);
 		}
         this.value = value.clearTime(true);
 
-        if(this.el && !this.multiSelection && this.noOfMonth==1){
+
+		if(this.el && !this.multiSelection && this.noOfMonth==1){
             this.update(this.value);
         }
-		
+
     },
 	
 /* this is needed to get it displayed in a panel correctly, it is called several times...*/	
@@ -2453,7 +2464,7 @@ if (Ext.form && Ext.form.DateField) {
 				type:'hidden',
 				name: name,
 				value:this.formatHiddenDate(this.parseDate(this.value))
-			});
+			}, Ext.isIE ? 'after' : 'before');
 			this.hiddenName = name;
 			this.el.dom.removeAttribute('name');
 			this.el.on({

@@ -349,6 +349,11 @@ This Widget has been tested on Firefox 2/3.x, IE6/7/8, Opera 9/10, Safari 3.1.x/
 
 
 Revision History:
+v.1.4.1 [2010/11/09]
+- checked to work with ExtJS 3.3.0
+- Forced to update viewport on setValue
+- BUGFIX: correctly position picker in datefield with hiddenfield on IE in some cases
+
 v.1.4 [2010/04/30]
 - checked to work with ExtJS 3.2.1
 - BUGFIX: Datepickers with shown months > 1 had a white glitch obove them (thanks to radubrehar)
