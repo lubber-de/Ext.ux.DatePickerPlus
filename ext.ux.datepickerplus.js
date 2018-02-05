@@ -81,6 +81,10 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.3 [2008/08/05]
+- Support of ExtJS 2.2
+- Adopted new config items from 1.2 to DateFieldPlus also
+
 v.1.2 [2008/08/04]
 - support "allowOtherMenus" Config for DateFieldPlus
 - datefieldplus can be hidden by clicking the triggerbutton again in cases hiding by clicking outside isn't possible
@@ -90,7 +94,7 @@ v.1.2 [2008/08/04]
 - added config "stayInAllowedRange" when setting minDate/maxDate, this will prevent to change months outside the allowed daterange  (suggested by descheret)
 - added config "summarizeHeader" to add an optional global header when using multimonth display containing the month range (e.g. january 2008-october 2008)
 - added italian locale (thanks to andreabat)
-- FIX: setMinDate/MaxDate/DateLimits did not update the viewport properly
+- BUGFIX: setMinDate/MaxDate/DateLimits did not update the viewport properly
 
 V1.1 Final [2008/06/12]
 - added config "allowMouseWheel" to generally turn on/off Mousewheelsupport (suggested by boraldo)
@@ -1025,11 +1029,12 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			this.mbtn.el.child(this.mbtn.menuClassTarget).addClass("x-btn-with-menu");
 		}
 
-        var today = new Date().dateFormat(this.format);
-		if (this.renderTodayButton) {
+//showtoday from Ext 2.2
+		if (this.renderTodayButton || this.showToday) {
+	        var today = new Date().dateFormat(this.format);			
 			this.todayBtn = new Ext.Button({
 				renderTo: this.el.child("td.x-date-bottom .x-date-todaybtn", true),
-				text: this.todayText,
+                text: String.format(this.todayText, today),
 				tooltip: String.format(this.todayTip, today),
 				handler: this.selectToday,
 				scope: this
@@ -1148,37 +1153,43 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
 	setMinDate: function(minDate) {
 		this.minDate = minDate;
-		this.updateClean();
+        this.update(this.value, true);
 	},
 
 	setMaxDate: function(maxDate) {
 		this.maxDate = maxDate;
-		this.updateClean();
+        this.update(this.value, true);
 	},
 
 	setDateLimits: function(minDate,maxDate) {
 		this.minDate = minDate;
 		this.maxDate = maxDate;
-		this.updateClean();
+        this.update(this.value, true);
 	},
 
-    updateClean: function() {
-		var ad = this.activeDate;
-		this.activeDate = null;
-		this.update(ad);
-	},
 	
 	// private
-    update : function(date,masked){
+//forcerefresh option from ext 2.2 just included to be compatible	
+    update : function(date, forceRefresh ,masked){
 		if (typeof masked==="undefined")  {
 			masked = false;
 		}
+		if (typeof forceRefresh==="undefined")  {
+			forceRefresh = false;
+		}
+		
+		if (forceRefresh) {
+			var ad = this.activeDate;
+			this.activeDate = null;
+			date = ad;			
+		}				
 		
 		var dMask = (this.displayMask && (isNaN(this.displayMask) || this.noOfMonth > this.displayMask)? true: false);
 		
 		if (!masked && dMask) {
 			this.el.mask(this.displayMaskText);
-			this.update.defer(10, this, [date,true]);
+//set forcerefresh to false because new date (from old activedate) is already calculated
+			this.update.defer(10, this, [date,false,true]);
 			return false;
 		}
 		
@@ -1863,16 +1874,18 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 	},
 
     selectToday : function(){
-		var today = new Date().clearTime();
-		var todayT = today.getTime();
-//today already visible?
-		if (typeof this.todayMonthCell === "number") {
-			this.markDateAsSelected(todayT,false,this.todayMonthCell,this.todayDayCell,true);
-		}
-		else if (this.multiSelection){
-			this.update(today);
-		}
-		this.finishDateSelection(today);
+        if(this.todayBtn && !this.todayBtn.disabled){
+			var today = new Date().clearTime();
+			var todayT = today.getTime();
+		//today already visible?
+			if (typeof this.todayMonthCell === "number") {
+				this.markDateAsSelected(todayT,false,this.todayMonthCell,this.todayDayCell,true);
+			}
+			else if (this.multiSelection){
+				this.update(today);
+			}
+			this.finishDateSelection(today);
+        }		
     },
 	
     setValue : function(value){
@@ -1968,6 +1981,11 @@ if (Ext.menu && Ext.menu.DateItem) {
 			shiftSpaceSelect: true,
 			disabledLetter: false,
 			allowMouseWheel:  true,
+			summarizeHeader: false,
+			stayInAllowedRange: true,
+			disableSingleDateSelection: false,
+			eventDatesSelectable: false,
+			styleDisabledDates: false,
 
 			allowOtherMenus: false,
 
@@ -2059,6 +2077,7 @@ if (Ext.menu && Ext.menu.DateItem) {
 					disabledDatesText : this.disabledDatesText,
 					disabledDays : this.disabledDays,
 					disabledDaysText : this.disabledDaysText,
+		            showToday : this.showToday,	//from Ext 2.2
 					format : this.format,
 					minText : String.format(this.minText, this.formatDate(this.minValue || this.minDate)),
 					maxText : String.format(this.maxText, this.formatDate(this.maxValue || this.maxDate)),
@@ -2067,7 +2086,7 @@ if (Ext.menu && Ext.menu.DateItem) {
 					markNationalHolidays:this.markNationalHolidays,
 					multiSelectByCTRL: this.multiSelectByCTRL,	
 					fillupRows: this.fillupRows,
-					multiSelection: this.multiSelection, //false,
+					multiSelection: this.multiSelection,
 					markWeekends:this.markWeekends,
 					weekendText:this.weekendText,
 					weekendCls: this.weekendCls,
@@ -2090,8 +2109,12 @@ if (Ext.menu && Ext.menu.DateItem) {
 					showActiveDate: this.showActiveDate,
 					shiftSpaceSelect: this.shiftSpaceSelect,
 					disabledLetter: this.disabledLetter,
-					allowMouseWheel: this.allowMouseWheel
-
+					allowMouseWheel: this.allowMouseWheel,
+					summarizeHeader: this.summarizeHeader,
+					stayInAllowedRange: this.stayInAllowedRange,
+					disableSingleDateSelection: this.disableSingleDateSelection,
+					eventDatesSelectable: this.eventDatesSelectable,
+					styleDisabledDates: this.styleDisabledDates
 				});
 				this.menu.on(Ext.apply({}, this.menuListeners, {
 					scope:this
