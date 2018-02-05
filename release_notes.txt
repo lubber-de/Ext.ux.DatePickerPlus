@@ -11,7 +11,7 @@
   * @extends Ext.form.DateField
   *
   
-  Version 1.4 beta
+  Version 1.4 beta 2
 
 -----------------  
 Description
@@ -65,6 +65,18 @@ API Documentation
 -----------------
 
 New config Items
+[since 1.4 beta2]
+"defaultValue" (DateFieldPlus only)
+A String in Dateformat or a DateObject that will be used as initial value when open the picker on an empty datefieldplus
+
+[since 1.4 beta]
+"prevNextDaysView" String/Boolean (default "mark")
+values:
+"mark" : selected days will be marked in prev/next months also
+"nomark" will not be marked and are not selectable
+false: will hide them, thus are not selectable too
+Note: When using anything other than "mark", week or monthclick will not select days outside the current month!
+
 [since 1.2]
 "styleDisabledDates": Boolean (default false)
 To be able to set custom style dates (eventdates/weekends..) on disabled dates also
@@ -80,15 +92,6 @@ When setting minDate/maxDate, this will prevent to change months outside the all
 
 "summarizeHeader": Boolean (default false)
 To add an optional global header when using multimonth display containing the month range (e.g. january 2008-october 2008)
-
-
-[since 1.4 beta]
-"prevNextDaysView" String/Boolean (default "mark")
-values:
-"mark" : selected days will be marked in prev/next months also
-"nomark" will not be marked and are not selectable
-false: will hide them, thus are not selectable too
-Note: When using anything other than "mark", week or monthclick will not select days outside the current month!
 
 [since 1.1 Final]
 "allowMouseWheel": Boolean (default true)
@@ -263,6 +266,20 @@ Works exactly like in Buttons-Widget
 
 
 New Events
+[since 1.4 beta]
+"beforemonthclick"
+Called with pickerobject, monthnumber (0=january,1=february...) and selectedState (if true, the whole month was selected, if false, it was unselected)
+Fires only when multiSelection=true and showWeekNumbers=true. Return false to cancel selection.
+
+"beforeweekclick"
+Called with pickerobject, date (firstdate of clicked week) and selectedState (if true, the whole week was selected, if false, it was unselected)
+Fires only when multiSelection=true and showWeekNumbers=true. Return false to cancel selection.
+
+"beforedateclick"
+Called with pickerobject and current clicked date
+Fires before a date is clicked. Return false to cancel selection.
+
+
 [since 1.1 Final]
 "beforemousewheel"
 Fires before the month will change on mousewheel trigger

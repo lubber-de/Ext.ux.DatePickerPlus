@@ -8,7 +8,7 @@
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
   *
-  * v.1.4 Beta
+  * v.1.4 Beta 2
   *
   * @class Ext.ux.form.DateFieldPlus
   * @extends Ext.form.DateField
@@ -18,6 +18,13 @@
   
 Also adds Ext.util.EasterDate
 	Calculates the Date-Object of easter-sunday of a given year
+
+ Commercial License available! See http://www.lubber.de/extjs/datepickerplus for more info
+
+* Donations are always welcome :)
+* Any amount is greatly appreciated and will help to continue on developing ExtJS Widgets
+*
+* You can donate via PayPal to donate@lubber.de
 
 -----------------------------------------------------------------------------------------------------
 -- DatePickerPlus Extension based on 4 contributed extensions from the ext-forum
@@ -57,12 +64,6 @@ Also adds Ext.util.EasterDate
  * GPL v3
  * License details: http://www.gnu.org/licenses/gpl.html
 
- Commercial License available! See http://www.lubber.de/extjs/datepickerplus for more info
-
-* Donations are always welcome :)
-* Any amount is greatly appreciated and will help to continue on developing ExtJS Widgets
-*
-* You can donate via PayPal to donate@lubber.de
 *
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -85,6 +86,15 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.4 Beta 2 [2009/09/18]
+- checked to work with ExtJS 3.0.0
+- checked to work with ExtJS 2.3.0
+- Adopted config item prevNextDaysView to DateFieldPlus
+- Adopted events beforedateclick, beforeweekclick and beforemonthclick to DateFieldPlus
+- more code optimations for Ext 3.0 compatibility
+- support option "defaultvalue" on datefieldplus
+- BUGFIX: setDisabled did not work under Ext 3.0 (reported by radtad)
+
 v.1.4 Beta [2009/07/03]
 - checked to work with ExtJS 3.0-RC3
 - checked to work with ExtJS 2.2.1
@@ -271,6 +281,7 @@ Be sure to include it AFTER the datepickerwidget!
 ROAD MAP:
 
 v1.5 (~ Summer/Autumn 2009)
+- add a config item to be able to hide specific dates/days just like disableddays but they are not even visible
 - add an additional event when the Ok-button is clicked
 - support shiftclick without deleting all previous selected dates
 - separate method to add/remove an eventdate or an array of eventdates without the need to supply the full set of eventdates
@@ -857,7 +868,24 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		}
 	},
 	
-    // private
+
+    doDisabled: function(disabled){
+        this.keyNav.setDisabled(disabled);
+		if (this.renderPrevNextButtons) {
+			this.leftClickRpt.setDisabled(disabled);
+			this.rightClickRpt.setDisabled(disabled);
+		}
+		if (this.renderPrevNextYearButtons) {
+			this.leftYearClickRpt.setDisabled(disabled);
+			this.rightYearClickRpt.setDisabled(disabled);
+		}
+        if(this.todayBtn){
+            this.todayKeyListener.setDisabled(disabled);
+            this.todayBtn.setDisabled(disabled);
+        }
+    },
+
+// private
 	onRender : function(container, position){
 		if (this.noOfMonthPerRow===0) {
 			this.noOfMonthPerRow = 1;
@@ -975,14 +1003,14 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
         this.eventEl = Ext.get(el.firstChild);
 
 		if (this.renderPrevNextButtons) {
-			var crl = new Ext.util.ClickRepeater(this.el.child("td.x-date-left a.npm"), {
+			this.leftClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-left a.npm"), {
 				handler: this.showPrevMonth,
 				scope: this,
 				preventDefault:true,
 				stopDefault:true
 			});
 	
-			var crr = new Ext.util.ClickRepeater(this.el.child("td.x-date-right a.npm"), {
+			this.rightClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-right a.npm"), {
 				handler: this.showNextMonth,
 				scope: this,
 				preventDefault:true,
@@ -991,14 +1019,14 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		}
 		
 		if (this.renderPrevNextYearButtons) {
-			var cryl = new Ext.util.ClickRepeater(this.el.child("td.x-date-left a.npy"), {
+			this.leftYearClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-left a.npy"), {
 				handler: this.showPrevYear,
 				scope: this,
 				preventDefault:true,
 				stopDefault:true
 			});
 	
-			var cryr = new Ext.util.ClickRepeater(this.el.child("td.x-date-right a.npy"), {
+			this.rightYearClickRpt = new Ext.util.ClickRepeater(this.el.child("td.x-date-right a.npy"), {
 				handler: this.showNextYear,
 				scope: this,
 				preventDefault:true,
@@ -1009,13 +1037,8 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			this.eventEl.on("mousewheel", this.handleMouseWheel,  this);
 		}
 
-		if (!this.disableMonthPicker) {
-	        this.monthPicker = this.el.down('div.x-date-mp');
-	        this.monthPicker.enableDisplayMode('block');
-		}
 
-
-        var kn = new Ext.KeyNav(this.eventEl, {
+        this.keyNav = new Ext.KeyNav(this.eventEl, {
             "left" : function(e){
                 (!this.disabled && e.ctrlKey && (!this.disableMonthPicker || this.renderPrevNextButtons) ?
                     this.showPrevMonth() :
@@ -1073,7 +1096,6 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		if (this.multiSelection && this.showWeekNumber) {
 			this.eventEl.on("click", this.handleWeekClick,  this, {delegate: "a.x-date-weeknumber"});
 		}
-        this.eventEl.addKeyListener(Ext.EventObject.SPACE, this.spaceKeyPressed,  this);		
         
         this.cellsArray = [];
         this.textNodesArray = [];
@@ -1099,18 +1121,23 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
 //set the original monthpicker again to the first month only to be able to quickly change the startmonth		
 		if (!this.disableMonthPicker) {
+	        this.monthPicker = this.el.down('div.x-date-mp');
+	        this.monthPicker.enableDisplayMode('block');
+			
 			this.mbtn = new Ext.Button({
-				text: " ",
+				text: "&#160;",
 				tooltip: this.monthYearText,
 				renderTo: this.el.child("td.x-date-firstMonth", true)			
 			});
 	
 			this.mbtn.on('click', this.showMonthPickerPlus, this);
-			this.mbtn.el.child(this.mbtn.menuClassTarget).addClass("x-btn-with-menu");
+	        this.mbtn.el.child('em').addClass('x-btn-arrow');						
+//			this.mbtn.el.child(this.mbtn.menuClassTarget).addClass("x-btn-with-menu");
 		}
 
 //showtoday from Ext 2.2
 		if (this.renderTodayButton || this.showToday) {
+	        this.todayKeyListener = this.eventEl.addKeyListener(Ext.EventObject.SPACE, this.spaceKeyPressed,  this);					
 	        var today = new Date().dateFormat(this.format);			
 			this.todayBtn = new Ext.Button({
 				renderTo: this.el.child("td.x-date-bottom .x-date-todaybtn", true),
@@ -1615,8 +1642,25 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 
 	beforeDestroy : function() {
 		if(this.rendered) {		
-			if (this.mbtn) {		
-				this.mbtn.destroy();
+            this.keyNav.disable();
+            this.keyNav = null;
+			if (this.renderPrevNextButtons) {
+				Ext.destroy(
+					this.leftClickRpt,
+					this.rightClickRpt
+				);
+			}
+			if (this.renderPrevNextYearButtons) {
+				Ext.destroy(
+					this.leftYearClickRpt,
+					this.rightYearClickRpt
+				);
+			}
+			if (!this.disableMonthPicker) {
+				Ext.destroy(
+					this.monthPicker,
+					this.mbtn
+				);
 			}
 			if (this.todayBtn) {
 				this.todayBtn.destroy();
@@ -1627,6 +1671,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 			if (this.undoBtn){
 				this.undoBtn.destroy();			
 			}
+			this.eventEl.destroy();
 		}
 	},
 
@@ -1647,8 +1692,8 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 				break;
 			}
 			
-			if ((amount==42 && this.fireEvent("beforemonthclick", this, startmonth,this.lastStateWasSelected) !== false)
-			||  (amount==7 && this.fireEvent("beforeweekclick", this, startweekdate,this.lastStateWasSelected) !== false)) {
+			if ((amount==42 && this.fireEvent("beforemonthclick", this, startmonth,this.lastStateWasSelected) !== false) ||
+			    (amount==7 && this.fireEvent("beforeweekclick", this, startweekdate,this.lastStateWasSelected) !== false)) {
 			
 				if (!Ext.EventObject.ctrlKey && this.multiSelectByCTRL) {
 					this.removeAllPreselectedClasses();
@@ -1833,7 +1878,7 @@ Ext.ux.DatePickerPlus = Ext.extend(Ext.DatePicker, {
 		e.stopEvent();
 		var tp = Ext.fly(t.parentNode);
 
-        if(!this.disabled && t.dateValue && !tp.hasClass("x-date-disabled") && !tp.hasClass("x-datepickerplus-eventdates-disabled") && this.fireEvent("beforedateclick", this,e) !== false){
+        if(!this.disabled && t.dateValue && !tp.hasClass("x-date-disabled") && !tp.hasClass("x-datepickerplus-eventdates-disabled") && this.fireEvent("beforedateclick", this,t) !== false){
 			if (( !tp.hasClass("x-date-prevday") && !tp.hasClass("x-date-nextday") ) || this.prevNextDaysView=="mark") {
 				var eO = Ext.EventObject;
 				if ((!eO.ctrlKey && this.multiSelectByCTRL) || eO.shiftKey || !this.multiSelection) {
@@ -2134,6 +2179,7 @@ if (Ext.form && Ext.form.DateField) {
 		disableSingleDateSelection: false,
 		eventDatesSelectable: false,
 		styleDisabledDates: false,
+		prevNextDaysView: "mark",
 
 		allowOtherMenus: false,
 
@@ -2165,6 +2211,18 @@ if (Ext.form && Ext.form.DateField) {
 			this.fireEvent("afterdateclick", this, date, wasSelected, picker);
 		},
 		
+		onBeforeMonthClick : function(picker, month, wasSelected){
+			this.fireEvent("beforemonthclick", this, month, wasSelected, picker);
+		},
+		
+		onBeforeWeekClick : function(picker, startOfWeek, wasSelected){
+			this.fireEvent("beforeweekclick", this, startOfWeek, wasSelected, picker);
+		},
+
+		onBeforeDateClick : function(picker, date){
+			this.fireEvent("beforedateclick", this, date);
+		},
+
 		onBeforeMouseWheel : function(picker, event){
 			this.fireEvent("beforemousewheel", this, event, picker);
 		},
@@ -2196,6 +2254,9 @@ if (Ext.form && Ext.form.DateField) {
 						'afterdateclick': {fn:this.onAfterDateClick,scope:this},
 						'aftermonthclick': {fn:this.onAfterMonthClick,scope:this},
 						'afterweekclick': {fn:this.onAfterWeekClick,scope:this},
+						'beforedateclick': {fn:this.onBeforeDateClick,scope:this},
+						'beforemonthclick': {fn:this.onBeforeMonthClick,scope:this},
+						'beforeweekclick': {fn:this.onBeforeWeekClick,scope:this},
 						'beforemousewheel': {fn:this.onBeforeMouseWheel,scope:this},
 						'beforemaxdays': {fn:this.onBeforeMaxDays,scope:this},
 						'undo': {fn:this.onUndo,scope:this}
@@ -2263,7 +2324,8 @@ if (Ext.form && Ext.form.DateField) {
 				stayInAllowedRange: this.stayInAllowedRange,
 				disableSingleDateSelection: this.disableSingleDateSelection,
 				eventDatesSelectable: this.eventDatesSelectable,
-				styleDisabledDates: this.styleDisabledDates
+				styleDisabledDates: this.styleDisabledDates,
+				prevNextDaysView : this.prevNextDaysView
 			});
 //Ext 3.0
 			if (this.menuEvents) {
@@ -2275,7 +2337,11 @@ if (Ext.form && Ext.form.DateField) {
 					scope:this
 				}));
 			}
-			this.menu.picker.setValue(this.getValue() || new Date());
+			if( typeof this.defaultValue == 'string' ) {
+				this.defaultValue = Date.parseDate( this.defaultValue, this.format );
+			}
+			
+			this.menu.picker.setValue(this.getValue() || this.defaultValue || new Date());
 			this.menu.show(this.el, "tl-bl?");
 			this.menu.focus();
 		},
