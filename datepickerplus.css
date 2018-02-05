@@ -19,6 +19,10 @@ th.x-date-weeknumber-header a:hover,
 	cursor:default !important;
 }
 
+.x-date-multiselect {
+	height:100%;
+}
+
 .x-date-multiselect th.x-date-weeknumber-header a:hover,
 .x-date-multiselect .x-date-weeknumber-cell a:hover {
 	background-color: #ddecfe !important;
@@ -57,7 +61,7 @@ th.x-date-weeknumber-header a:hover,
 
 .x-date-pickerplus  .x-date-middle {
 	font-weight:normal !important;
-	height:25px;
+	height:26px;
 }
 
 .x-date-multiokbtn,
@@ -152,3 +156,11 @@ th.x-date-weeknumber-header a:hover,
 	visibility:hidden !important;
 }
 
+/*
+Reverse Ext 3.2.x Hack to display more than 1 months vertically on datemenu
+*/
+.ext-ie .x-date-menu,
+.ext-strict .ext-ie .x-date-menu, .ext-border-box .ext-ie8 .x-date-menu,
+.ext-strict .ext-ie7 .x-date-menu{	
+    height: auto;
+}

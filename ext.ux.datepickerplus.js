@@ -8,7 +8,7 @@
   * @class Ext.ux.DatePickerPlus
   * @extends Ext.DatePicker
   *
-  * v.1.4 RC1
+  * v.1.4
   *
   * @class Ext.ux.form.DateFieldPlus
   * @extends Ext.form.DateField
@@ -78,7 +78,7 @@ Also adds Ext.util.EasterDate
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 	
- * This Addon requires the ExtJS Library, which is distributed under the terms of the GPL v3 (from V2.1)
+ * This Addon requires the ExtJS Library, which is distributed under the terms of the GPL v3 (since ExtJs V2.1)
  * See http://extjs.com/license for more info
  
 
@@ -86,6 +86,14 @@ Also adds Ext.util.EasterDate
 
   
 Revision History:
+v.1.4 [2010/04/30]
+- checked to work with ExtJS 3.2.1
+- BUGFIX: Datepickers with shown months > 1 had a white glitch obove them (thanks to radubrehar)
+- BUGFIX: CSS Fixes for Datemenus and more than 1 row of months  when using IE8 in Compatibility Mode
+- added romanian locale (thanks to radubrehar)
+- added japanese locale (thanks to itheart)
+- added polish locale (thanks to maboch)
+
 v.1.4 RC1 [2010/03/04]
 - checked to work with ExtJS 3.1.1
 - BUGFIX: DateField Events did not work properly (reported by yuewah)
@@ -277,6 +285,9 @@ Joined the extensions together nicely and added even more features:
 	french
 	norwegian
 	spanish
+	romanian
+	japanese
+	polish	
 	english (for your own translations)
 
 Create a copy of ext.ux.datepickerplus-lang-en.js and change it to your language settings to get this widget easily translated
@@ -286,12 +297,12 @@ Be sure to include it AFTER the datepickerwidget!
 
 ROAD MAP:
 
-v1.5 (~ Spring 2010)
+v1.5 (~ Summer 2010)
+- support stores for selectedDates, allowedDates, disabledDates and eventDates
 - Check if given value for first renderered month stays within a given min/maxdate (suggested by bholyoak)
 - add a config item to be able to hide specific dates just like disableddays but they are not even visible
 - add a config item to be able to hide specific days (do not even display a column for that days)
 - add an additional event when the Ok-button is clicked
-- support shiftclick without deleting all previous selected dates
 - separate method to add/remove an eventdate or an array of eventdates without the need to supply the full set of eventdates
 - same for disableddates/alloweddates/selecteddates (creating something like addAllowedDates/removeAllowedDates)
 - support of multiple events at the same date
@@ -304,7 +315,7 @@ v1.5 (~ Spring 2010)
 - support hovering a full week/month/days when moving the mouse over weekday/weeknumber/weeknumberheader
 - support dateranges for eventdates
 
-v1.6/2.0 (~ Summer/Fall 2010)
+v1.6/2.0 (~ Fall 2010/Spring 2011)
 - change monthselection to combobox selection of month and year as an option
 - implement time selection also like http://extjs.com/forum/showthread.php?p=170472#post170472
 - use the spinner plugin for above selections if available (or integrate it) or combobox instead (?)
@@ -317,6 +328,7 @@ v1.6/2.0 (~ Summer/Fall 2010)
 - extend property grid/create plugin to use datepickerplus aswell for date-fields in there
 - show monthpicker only (requested in http://extjs.com/forum/showthread.php?t=13911)
 - full support of editor grids
+- support shiftclick without deleting all previous selected dates
 - try to speed up rendering-performance, when clicking on next/previous month (update()) and on startup (onRender()) (IE and FF are much slower than Opera(which is equal slow, but renders immediatly every part of the calendar while IE/FF are rendering the complete calender at the end). Safari3.2(Win) and Chrome render very fast by now!
 																																																																										
 

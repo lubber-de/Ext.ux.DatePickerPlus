@@ -11,7 +11,7 @@
   * @extends Ext.form.DateField
   *
   
-  Version 1.4 RC1
+  Version 1.4
 
 -----------------  
 Description
@@ -345,10 +345,18 @@ Same with the maxDate
 
 
 Compatibility
-This Widget has been tested on Firefox 2/3.x, IE6/7/8, Opera 9/10 and Safari 3.1.x/4 (Win), Chrome 3/4
+This Widget has been tested on Firefox 2/3.x, IE6/7/8, Opera 9/10, Safari 3.1.x/4 (Win) and Chrome 3/4/5
 
 
 Revision History:
+v.1.4 [2010/04/30]
+- checked to work with ExtJS 3.2.1
+- BUGFIX: Datepickers with shown months > 1 had a white glitch obove them (thanks to radubrehar)
+- BUGFIX: CSS Fixes for Datemenus and more than 1 row of months  when using IE8 in Compatibility Mode
+- added romanian locale (thanks to radubrehar)
+- added japanese locale (thanks to itheart)
+- added polish locale (thanks to maboch)
+
 v.1.4 RC1 [2010/03/04]
 - checked to work with ExtJS 3.1.1
 - BUGFIX: DateField Events did not work properly (reported by yuewah)
